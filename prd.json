@@ -96,7 +96,7 @@
         "REQ-036 `--output` \uc635\uc158\uc73c\ub85c \ucd9c\ub825 \ud30c\uc77c \uacbd\ub85c\ub97c \uc9c0\uc815\ud560 \uc218 \uc788\ub2e4"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

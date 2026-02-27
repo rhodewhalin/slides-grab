@@ -13,3 +13,11 @@
 ## US-004 — PASS (2026-02-27T14:44:20Z)
 - Title: 차트/다이어그램/이미지 HTML 라이브러리 지원
 - Attempts: 1
+## US-004 — PASS (2026-02-27T14:46:17Z)
+- Title: 차트/다이어그램/이미지 HTML 라이브러리 지원
+- Attempts: 1
+
+## US-005 — PASS (2026-02-27T14:55:18Z)
+- Title: VLM 기반 슬라이드 자동 포맷 검증
+- Attempts: 1
+
