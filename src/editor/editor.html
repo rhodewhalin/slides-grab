@@ -458,6 +458,37 @@
       font-size: 11px;
     }
 
+    .model-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .model-label {
+      color: #9ca3af;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .model-select {
+      min-width: 196px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid #3f3f46;
+      background: #202020;
+      color: #e5e7eb;
+      font-size: 12px;
+      font-family: inherit;
+      padding: 0 8px;
+      outline: none;
+    }
+
+    .model-select:focus {
+      border-color: #64748b;
+    }
+
     .btn-send {
       background: #2563eb;
       color: #fff;
@@ -635,7 +666,14 @@
             </div>
             <textarea id="prompt-input" class="prompt-input" placeholder="Describe the edit for this slide..."></textarea>
             <div class="composer-actions">
-              <span class="hint">Cmd/Ctrl+Enter to run</span>
+              <div class="model-control">
+                <span class="hint">Cmd/Ctrl+Enter to run</span>
+                <label class="model-label" for="model-select">Model</label>
+                <select id="model-select" class="model-select">
+                  <option value="gpt-5.3-codex">gpt-5.3-codex</option>
+                  <option value="gpt-5.3-codex-spark">gpt-5.3-codex-spark</option>
+                </select>
+              </div>
               <button class="btn btn-send" id="btn-send">Run Codex</button>
             </div>
           </div>
@@ -678,6 +716,9 @@
 
     const SLIDE_W = 960;
     const SLIDE_H = 540;
+    const DEFAULT_MODELS = ['gpt-5.3-codex', 'gpt-5.3-codex-spark'];
+    let availableModels = DEFAULT_MODELS.slice();
+    let selectedModel = DEFAULT_MODELS[0];
 
     // -------------------------------------------------------------------------
     // DOM refs
@@ -697,6 +738,7 @@
 
     const chatMessagesEl = $('#chat-messages');
     const promptInput = $('#prompt-input');
+    const modelSelect = $('#model-select');
     const btnClearBboxes = $('#btn-clear-bboxes');
     const bboxCountEl = $('#bbox-count');
     const btnSend = $('#btn-send');
@@ -740,6 +782,73 @@
 
     function randomId(prefix) {
       return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    }
+
+    function normalizeModelName(value) {
+      return typeof value === 'string' ? value.trim() : '';
+    }
+
+    function loadSavedModel() {
+      try {
+        return normalizeModelName(window.localStorage.getItem('ppt-agent-editor-model'));
+      } catch {
+        return '';
+      }
+    }
+
+    function saveSelectedModel(model) {
+      try {
+        window.localStorage.setItem('ppt-agent-editor-model', model);
+      } catch {
+        // ignore
+      }
+    }
+
+    function setModelOptions(models, preferredModel = '') {
+      const list = Array.isArray(models)
+        ? models
+          .map((name) => normalizeModelName(name))
+          .filter((name) => name !== '')
+        : [];
+      const uniqueModels = Array.from(new Set(list));
+
+      availableModels = uniqueModels.length > 0 ? uniqueModels : DEFAULT_MODELS.slice();
+
+      const preferred = normalizeModelName(preferredModel);
+      const saved = loadSavedModel();
+
+      if (availableModels.includes(preferred)) {
+        selectedModel = preferred;
+      } else if (availableModels.includes(saved)) {
+        selectedModel = saved;
+      } else {
+        selectedModel = availableModels[0];
+      }
+
+      modelSelect.innerHTML = availableModels
+        .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+        .join('');
+      modelSelect.value = selectedModel;
+      saveSelectedModel(selectedModel);
+    }
+
+    async function loadModelOptions() {
+      const saved = loadSavedModel();
+
+      try {
+        const res = await fetch('/api/models');
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const payload = await res.json();
+        const serverModels = Array.isArray(payload.models) ? payload.models : [];
+        const serverDefault = normalizeModelName(payload.defaultModel);
+
+        setModelOptions(serverModels, saved || serverDefault);
+      } catch {
+        setModelOptions(DEFAULT_MODELS, saved);
+      }
     }
 
     function normalizeBoxStatus(status) {
@@ -851,6 +960,7 @@
             `<span class="run-slide">${escapeHtml(run.slide)}</span>`,
             `</div>`,
             `<div class="run-meta">${escapeHtml(run.status || 'idle')} | ${formatTime(run.startedAt)}</div>`,
+            `<div class="run-meta">model: ${escapeHtml(run.model || '-')}</div>`,
             `<div class="run-meta">${escapeHtml(run.message || '')}</div>`,
             `<div class="run-actions">`,
             `<span class="run-meta">runId: ${escapeHtml(run.runId)}</span>`,
@@ -1173,7 +1283,7 @@
       const pendingCount = state.boxes.filter((box) => normalizeBoxStatus(box.status) === 'pending').length;
       const blocked = pendingRequestBySlide.has(slide) || activeRunBySlide.has(slide);
 
-      btnSend.disabled = !prompt || pendingCount === 0 || blocked;
+      btnSend.disabled = !prompt || pendingCount === 0 || blocked || !selectedModel;
       btnClearBboxes.disabled = state.boxes.length === 0 || blocked;
       updateSlideStatusChip();
     }
@@ -1203,7 +1313,7 @@
         targets: extractTargetsForBox(box),
       }));
 
-      addChatMessage('user', `[${slide}] ${prompt}`);
+      addChatMessage('user', `[${slide}] [${selectedModel}] ${prompt}`);
 
       pendingRequestBySlide.add(slide);
       state.prompt = '';
@@ -1218,6 +1328,7 @@
           body: JSON.stringify({
             slide,
             prompt,
+            model: selectedModel,
             selections,
           }),
         });
@@ -1240,6 +1351,7 @@
             status: data.success ? 'success' : 'failed',
             code: data.code,
             message: data.message,
+            model: data.model || selectedModel,
             startedAt: existing.startedAt || new Date().toISOString(),
             finishedAt: new Date().toISOString(),
             logPreview: existing.logPreview || '',
@@ -1360,8 +1472,9 @@
           upsertRun({
             runId: payload.runId,
             slide: payload.slide,
+            model: payload.model || '',
             status: 'running',
-            message: `Running (${payload.selectionsCount || 0} bbox)` ,
+            message: `${payload.model ? `${payload.model} | ` : ''}Running (${payload.selectionsCount || 0} bbox)`,
             startedAt: new Date().toISOString(),
             logPreview: '',
           });
@@ -1405,6 +1518,7 @@
           upsertRun({
             runId: payload.runId,
             slide: payload.slide,
+            model: payload.model || '',
             status: payload.success ? 'success' : 'failed',
             code: payload.code,
             message: payload.message,
@@ -1482,6 +1596,19 @@
 
     btnSend.addEventListener('click', applyChanges);
 
+    modelSelect.addEventListener('change', () => {
+      const nextModel = normalizeModelName(modelSelect.value);
+      if (!availableModels.includes(nextModel)) {
+        modelSelect.value = selectedModel;
+        return;
+      }
+
+      selectedModel = nextModel;
+      saveSelectedModel(selectedModel);
+      updateSendState();
+      setStatus(`Model selected: ${selectedModel}`);
+    });
+
     promptInput.addEventListener('input', () => {
       const slide = currentSlideFile();
       if (slide) {
@@ -1541,12 +1668,13 @@
           return;
         }
 
+        await loadModelOptions();
         goToSlide(0);
         scaleSlide();
         await loadRunsInitial();
         connectSSE();
 
-        setStatus('Ready. Draw red pending bboxes, run Codex, then review green bboxes.');
+        setStatus(`Ready. Model: ${selectedModel}. Draw red pending bboxes, run Codex, then review green bboxes.`);
       } catch (error) {
         setStatus(`Error loading slides: ${error.message}`);
         console.error('Init error:', error);

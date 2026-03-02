@@ -33,7 +33,8 @@ async function loadDeps() {
 }
 
 const DEFAULT_PORT = 3456;
-const DEFAULT_CODEX_MODEL = 'gpt-5.3-codex';
+const CODEX_MODELS = ['gpt-5.3-codex', 'gpt-5.3-codex-spark'];
+const DEFAULT_CODEX_MODEL = CODEX_MODELS[0];
 const SLIDE_FILE_PATTERN = /^slide-.*\.html$/i;
 
 const MAX_RUNS = 200;
@@ -43,14 +44,13 @@ function printUsage() {
   process.stdout.write(`Usage: ppt-agent edit [options]\n\n`);
   process.stdout.write(`Options:\n`);
   process.stdout.write(`  --port <number>           Server port (default: ${DEFAULT_PORT})\n`);
-  process.stdout.write(`  --codex-model <name>      Codex model (default: ${DEFAULT_CODEX_MODEL})\n`);
+  process.stdout.write(`  Model is selected in editor UI dropdown.\n`);
   process.stdout.write(`  -h, --help                Show this help message\n`);
 }
 
 function parseArgs(argv) {
   const opts = {
     port: DEFAULT_PORT,
-    codexModel: DEFAULT_CODEX_MODEL,
     help: false,
   };
 
@@ -68,7 +68,7 @@ function parseArgs(argv) {
     }
 
     if (arg === '--codex-model') {
-      opts.codexModel = String(argv[i + 1] || '').trim();
+      // Backward compatibility: ignore legacy CLI option.
       i += 1;
       continue;
     }
@@ -78,10 +78,6 @@ function parseArgs(argv) {
 
   if (!Number.isInteger(opts.port) || opts.port <= 0) {
     throw new Error('`--port` must be a positive integer.');
-  }
-
-  if (typeof opts.codexModel !== 'string' || opts.codexModel.trim() === '') {
-    throw new Error('`--codex-model` must be a non-empty string.');
   }
 
   return opts;
@@ -170,6 +166,15 @@ function normalizeSelections(rawSelections) {
   });
 }
 
+function normalizeCodexModel(rawModel) {
+  const model = typeof rawModel === 'string' ? rawModel.trim() : '';
+  if (!model) return DEFAULT_CODEX_MODEL;
+  if (!CODEX_MODELS.includes(model)) {
+    throw new Error(`Invalid \`model\`. Allowed models: ${CODEX_MODELS.join(', ')}`);
+  }
+  return model;
+}
+
 function randomRunId() {
   const ts = Date.now();
   const rand = Math.floor(Math.random() * 100000);
@@ -219,6 +224,7 @@ function createRunStore() {
     return {
       runId: run.runId,
       slide: run.slide,
+      model: run.model,
       status: run.status,
       code: run.code,
       message: run.message,
@@ -240,7 +246,7 @@ function createRunStore() {
       return activeRunsBySlide.get(slide) ?? null;
     },
 
-    startRun({ runId, slide, prompt, selectionsCount }) {
+    startRun({ runId, slide, prompt, selectionsCount, model }) {
       activeRunsBySlide.set(slide, runId);
 
       const run = {
@@ -250,6 +256,7 @@ function createRunStore() {
         code: null,
         message: 'Running',
         prompt,
+        model,
         selectionsCount,
         startedAt: new Date().toISOString(),
         finishedAt: null,
@@ -371,6 +378,13 @@ async function startServer(opts) {
     }
   });
 
+  app.get('/api/models', (_req, res) => {
+    res.json({
+      models: CODEX_MODELS,
+      defaultModel: DEFAULT_CODEX_MODEL,
+    });
+  });
+
   app.get('/api/runs', (_req, res) => {
     res.json({
       runs: runStore.listRuns(100),
@@ -406,7 +420,7 @@ async function startServer(opts) {
   });
 
   app.post('/api/apply', async (req, res) => {
-    const { slide, prompt, selections } = req.body ?? {};
+    const { slide, prompt, selections, model } = req.body ?? {};
 
     if (!slide || typeof slide !== 'string' || !SLIDE_FILE_PATTERN.test(slide)) {
       return res.status(400).json({ error: 'Missing or invalid `slide`.' });
@@ -414,6 +428,13 @@ async function startServer(opts) {
 
     if (typeof prompt !== 'string' || prompt.trim() === '') {
       return res.status(400).json({ error: 'Missing or invalid `prompt`.' });
+    }
+
+    let selectedModel;
+    try {
+      selectedModel = normalizeCodexModel(model);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
     }
 
     if (runStore.hasActiveRunForSlide(slide)) {
@@ -437,11 +458,13 @@ async function startServer(opts) {
       slide,
       prompt: prompt.trim(),
       selectionsCount: normalizedSelections.length,
+      model: selectedModel,
     });
 
     broadcastSSE('applyStarted', {
       runId,
       slide,
+      model: selectedModel,
       selectionsCount: normalizedSelections.length,
       selectionBoxes: normalizedSelections.map((selection) => selection.bbox),
     });
@@ -481,7 +504,7 @@ async function startServer(opts) {
       const result = await spawnCodexEdit({
         prompt: codexPrompt,
         imagePath: annotatedPath,
-        model: opts.codexModel,
+        model: selectedModel,
         cwd: process.cwd(),
         onLog: (stream, chunk) => {
           runStore.appendLog(runId, chunk);
@@ -503,6 +526,7 @@ async function startServer(opts) {
       broadcastSSE('applyFinished', {
         runId,
         slide,
+        model: selectedModel,
         success,
         code: result.code,
         message,
@@ -513,6 +537,7 @@ async function startServer(opts) {
         ...runSummary,
         success,
         runId,
+        model: selectedModel,
         code: result.code,
         message,
       });
@@ -528,6 +553,7 @@ async function startServer(opts) {
       broadcastSSE('applyFinished', {
         runId,
         slide,
+        model: selectedModel,
         success: false,
         code: -1,
         message,
@@ -558,7 +584,7 @@ async function startServer(opts) {
     process.stdout.write('\n  ppt-agent editor\n');
     process.stdout.write('  ─────────────────────────────────────\n');
     process.stdout.write(`  Local:       http://localhost:${opts.port}\n`);
-    process.stdout.write(`  Codex model: ${opts.codexModel}\n`);
+    process.stdout.write(`  Codex models:${CODEX_MODELS.join(', ')}\n`);
     process.stdout.write(`  Slides:      ${slidesDir()}\n`);
     process.stdout.write('  ─────────────────────────────────────\n\n');
   });
