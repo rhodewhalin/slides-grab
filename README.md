@@ -60,4 +60,27 @@ npm run build-viewer
 npm run validate
 npm run convert
 npm run html2pptx
+npm run codex:install-skills
 ```
+
+## Codex Skills
+
+This repository includes Codex-native skills under `skills/`:
+
+- `ppt-plan-skill`
+- `ppt-design-skill`
+- `ppt-pptx-skill`
+
+Install them into Codex skill home:
+
+```bash
+ppt-agent install-codex-skills --force
+```
+
+or:
+
+```bash
+node scripts/install-codex-skills.js --force
+```
+
+After installation, restart Codex to pick up the new skills.

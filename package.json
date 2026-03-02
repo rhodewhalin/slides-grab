@@ -10,7 +10,8 @@
     "html2pptx": "node .claude/skills/pptx-skill/scripts/html2pptx.js",
     "build-viewer": "node scripts/build-viewer.js",
     "validate": "node scripts/validate-slides.js",
-    "convert": "node convert.cjs"
+    "convert": "node convert.cjs",
+    "codex:install-skills": "node scripts/install-codex-skills.js --force"
   },
   "dependencies": {
     "commander": "^12.1.0",

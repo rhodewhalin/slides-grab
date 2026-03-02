@@ -13,6 +13,9 @@ ppt-team-agent is an agent-first PPT framework. AI agents write HTML slides dire
 | `.claude/skills/plan-skill/SKILL.md` | Planning skill (outline generation supervisor) |
 | `.claude/skills/design-skill/SKILL.md` | Design skill (HTML slide generation rules, ~963 lines) |
 | `.claude/skills/pptx-skill/SKILL.md` | Conversion skill (HTML→PPTX) |
+| `skills/ppt-plan-skill/SKILL.md` | Codex plan skill (outline workflow) |
+| `skills/ppt-design-skill/SKILL.md` | Codex design skill (HTML slides + viewer loop) |
+| `skills/ppt-pptx-skill/SKILL.md` | Codex conversion skill (HTML→PPTX/PDF) |
 | `.claude/skills/pptx-skill/scripts/html2pptx.js` | Main HTML→PPTX converter (Playwright + PptxGenJS) |
 | `.claude/skills/pptx-skill/scripts/thumbnail.py` | Thumbnail grid generator |
 | `.claude/skills/pptx-skill/ooxml/` | OOXML pack/unpack/validate scripts |
@@ -45,6 +48,9 @@ ppt-team-agent is an agent-first PPT framework. AI agents write HTML slides dire
 | `plan-skill` | Supervisor: delegates to agents, manages user feedback loop | Stage 1 |
 | `design-skill` | Defines HTML generation rules, templates, palettes | Stage 2 |
 | `pptx-skill` | HTML→PPTX conversion pipeline | Stage 3 |
+| `ppt-plan-skill` | Codex Stage 1 outline planning | Stage 1 |
+| `ppt-design-skill` | Codex Stage 2 slide design/review | Stage 2 |
+| `ppt-pptx-skill` | Codex Stage 3 conversion | Stage 3 |
 
 ## Dependencies
 

@@ -93,9 +93,25 @@ program
 program
   .command('edit')
   .description('Start interactive slide editor with Codex image-based edit flow')
-  .argument('[args...]', 'Arguments: --port, --codex-model')
-  .action(async (args = []) => {
+  .option('--port <number>', 'Server port')
+  .action(async (options = {}) => {
+    const args = [];
+    if (options.port) {
+      args.push('--port', String(options.port));
+    }
     await runCommand('scripts/editor-server.js', args);
+  });
+
+program
+  .command('install-codex-skills')
+  .description('Install project Codex skills into $CODEX_HOME/skills (default: ~/.codex/skills)')
+  .option('--force', 'Overwrite existing skill directories')
+  .option('--dry-run', 'Preview what would be installed')
+  .action(async (options = {}) => {
+    const args = [];
+    if (options.force) args.push('--force');
+    if (options.dryRun) args.push('--dry-run');
+    await runCommand('scripts/install-codex-skills.js', args);
   });
 
 // --- Template/theme discovery commands ---
