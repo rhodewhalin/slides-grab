@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -288,6 +288,130 @@ test('keeps chat and model state per slide session', async () => {
       const node = document.querySelector('#chat-messages');
       const text = node?.textContent || '';
       return /slide-01 prompt/.test(text) && !/slide-02 prompt/.test(text);
+    });
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+    server.kill('SIGTERM');
+    await sleep(400);
+    await rm(workspace, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+test('supports direct object selection, inline styling, and switching back to bbox mode', async () => {
+  const workspace = await mkdtemp(join(os.tmpdir(), 'editor-ui-direct-edit-e2e-'));
+  await writeSlides(workspace);
+
+  const port = 3654;
+  const serverOutput = { value: '' };
+  const serverScriptPath = join(REPO_ROOT, 'scripts', 'editor-server.js');
+  const server = spawn(process.execPath, [serverScriptPath, '--port', String(port)], {
+    cwd: workspace,
+    env: {
+      ...process.env,
+      PPT_AGENT_PACKAGE_ROOT: REPO_ROOT,
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  server.stdout.on('data', (chunk) => {
+    serverOutput.value += chunk.toString();
+  });
+  server.stderr.on('data', (chunk) => {
+    serverOutput.value += chunk.toString();
+  });
+
+  let browser;
+  try {
+    await waitForServerReady(port, server, serverOutput);
+
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+    await page.goto(`http://localhost:${port}/`, { waitUntil: 'domcontentloaded' });
+
+    await page.waitForSelector('#draw-layer');
+    await page.waitForSelector('#slide-iframe');
+    await page.waitForTimeout(800);
+
+    await page.click('#tool-mode-select');
+
+    const drawLayer = await page.locator('#draw-layer').boundingBox();
+    assert.ok(drawLayer, 'draw layer not found');
+
+    await page.mouse.click(
+      drawLayer.x + drawLayer.width * 0.22,
+      drawLayer.y + drawLayer.height * 0.18,
+    );
+
+    await page.waitForFunction(() => {
+      const chip = document.querySelector('#selected-object-chip');
+      return chip && /h1/i.test(chip.textContent || '');
+    });
+
+    await page.fill('#object-text-input', 'Quarterly Update');
+    await page.fill('#object-font-size', '64');
+    await page.$eval('#object-text-color', (el) => {
+      el.value = '#112233';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await page.$eval('#object-bg-color', (el) => {
+      el.value = '#fee2e2';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await page.click('#toggle-bold');
+    await page.click('#toggle-bold');
+    await page.click('#toggle-strike');
+    await page.click('#align-center');
+
+    await page.waitForFunction(() => {
+      const status = document.querySelector('#status-message');
+      return status && /saved|updated/i.test(status.textContent || '');
+    });
+
+    const frameHeading = page.frameLocator('#slide-iframe').locator('h1');
+    await assert.doesNotReject(async () => frameHeading.waitFor());
+    assert.equal(await frameHeading.textContent(), 'Quarterly Update');
+
+    const headingStyles = await frameHeading.evaluate((node) => {
+      const styles = window.getComputedStyle(node);
+      return {
+        color: styles.color,
+        backgroundColor: styles.backgroundColor,
+        fontWeight: styles.fontWeight,
+        textDecorationLine: styles.textDecorationLine,
+        textAlign: styles.textAlign,
+        fontSize: styles.fontSize,
+      };
+    });
+
+    assert.match(headingStyles.color, /17,\s*34,\s*51/);
+    assert.match(headingStyles.backgroundColor, /254,\s*226,\s*226/);
+    assert.ok(Number(headingStyles.fontWeight) >= 600 || /bold/i.test(headingStyles.fontWeight));
+    assert.match(headingStyles.textDecorationLine, /line-through/);
+    assert.equal(headingStyles.textAlign, 'center');
+    assert.equal(headingStyles.fontSize, '64px');
+
+    const savedHtml = await readFile(join(workspace, 'slides', 'slide-01.html'), 'utf8');
+    assert.match(savedHtml, /Quarterly Update/);
+    assert.match(savedHtml, /font-size:\s*64px/i);
+    assert.match(savedHtml, /text-align:\s*center/i);
+    assert.match(savedHtml, /line-through/i);
+    assert.match(savedHtml, /font-weight:\s*(700|bold)/i);
+    assert.match(savedHtml, /(rgb\(17,\s*34,\s*51\)|#112233)/i);
+    assert.match(savedHtml, /(rgb\(254,\s*226,\s*226\)|#fee2e2)/i);
+
+    await page.click('#tool-mode-draw');
+    await page.mouse.move(drawLayer.x + drawLayer.width * 0.08, drawLayer.y + drawLayer.height * 0.10);
+    await page.mouse.down();
+    await page.mouse.move(drawLayer.x + drawLayer.width * 0.40, drawLayer.y + drawLayer.height * 0.24, { steps: 6 });
+    await page.mouse.up();
+
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#bbox-count');
+      return el && /1 pending/.test(el.textContent || '');
     });
   } finally {
     if (browser) {

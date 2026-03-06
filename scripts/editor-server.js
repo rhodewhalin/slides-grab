@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readdir, readFile, mkdtemp, rm, mkdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdtemp, rm, mkdir } from 'node:fs/promises';
 import { watch as fsWatch } from 'node:fs';
 import { basename, dirname, join, resolve, relative, sep } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -165,6 +165,21 @@ async function listSlideFiles(slidesDirectory) {
       const numB = Number.parseInt(b.match(/\d+/)?.[0] ?? '0', 10);
       return numA - numB || a.localeCompare(b);
     });
+}
+
+function normalizeSlideFilename(rawSlide, source = '`slide`') {
+  const slide = typeof rawSlide === 'string' ? basename(rawSlide.trim()) : '';
+  if (!slide || !SLIDE_FILE_PATTERN.test(slide)) {
+    throw new Error(`Missing or invalid ${source}.`);
+  }
+  return slide;
+}
+
+function normalizeSlideHtml(rawHtml) {
+  if (typeof rawHtml !== 'string' || rawHtml.trim() === '') {
+    throw new Error('Missing or invalid `html`.');
+  }
+  return rawHtml;
 }
 
 function sanitizeTargets(rawTargets) {
@@ -389,8 +404,10 @@ async function startServer(opts) {
   });
 
   app.get('/slides/:file', async (req, res) => {
-    const file = basename(req.params.file);
-    if (!SLIDE_FILE_PATTERN.test(file)) {
+    let file;
+    try {
+      file = normalizeSlideFilename(req.params.file, 'slide filename');
+    } catch {
       return res.status(400).send('Invalid slide filename');
     }
 
@@ -409,6 +426,57 @@ async function startServer(opts) {
       res.json(files);
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/slides/:file/save', async (req, res) => {
+    let file;
+    try {
+      file = normalizeSlideFilename(req.params.file, '`slide`');
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    const bodySlide = req.body?.slide;
+    if (bodySlide !== undefined) {
+      let normalizedBodySlide;
+      try {
+        normalizedBodySlide = normalizeSlideFilename(bodySlide, '`slide`');
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      if (normalizedBodySlide !== file) {
+        return res.status(400).json({ error: '`slide` does not match the requested file.' });
+      }
+    }
+
+    let html;
+    try {
+      html = normalizeSlideHtml(req.body?.html);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    const filePath = join(slidesDirectory, file);
+    try {
+      await readFile(filePath, 'utf-8');
+    } catch {
+      return res.status(404).json({ error: `Slide not found: ${file}` });
+    }
+
+    try {
+      await writeFile(filePath, html, 'utf8');
+      return res.json({
+        success: true,
+        slide: file,
+        bytes: Buffer.byteLength(html, 'utf8'),
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: `Failed to save ${file}: ${error.message}`,
+      });
     }
   });
 

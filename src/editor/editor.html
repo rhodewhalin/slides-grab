@@ -142,12 +142,156 @@
     .slide-panel {
       flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 12px;
       padding: 24px;
       min-width: 0;
       overflow: hidden;
       background: linear-gradient(180deg, #0f141b 0%, #0d1218 100%);
+    }
+
+    .slide-toolbox {
+      width: min(100%, 996px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border: 1px solid #293444;
+      border-radius: 12px;
+      background: rgba(15, 21, 29, 0.92);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    .tool-mode-group,
+    .direct-edit-group,
+    .direct-toggle-group,
+    .direct-align-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-mode-btn {
+      border: 1px solid #2c3847;
+      background: #18212c;
+      color: #d6e1ec;
+      border-radius: 8px;
+      height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .tool-mode-btn:hover {
+      background: #212d3a;
+    }
+
+    .tool-mode-btn.active {
+      border-color: #3963a4;
+      background: #1d3355;
+      color: #e8f0fb;
+    }
+
+    .selected-object-chip {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #2f3c4d;
+      background: #111a24;
+      color: #d9e4ef;
+      padding: 0 10px;
+      font-size: 11px;
+      font-family: var(--mono);
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .selected-object-chip.empty {
+      color: var(--text-2);
+      border-color: #26303b;
+      background: #0f151d;
+    }
+
+    .direct-edit-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .direct-edit-controls[hidden] {
+      display: none !important;
+    }
+
+    .direct-edit-label {
+      color: var(--text-2);
+      font-size: 11px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .direct-input,
+    .direct-number {
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #2e3948;
+      background: #0f141a;
+      color: #e6edf3;
+      font-size: 12px;
+      font-family: var(--sans);
+      padding: 0 10px;
+      outline: none;
+    }
+
+    .direct-input:focus,
+    .direct-number:focus {
+      border-color: #496a94;
+    }
+
+    .direct-text-input {
+      width: 180px;
+    }
+
+    .direct-number {
+      width: 74px;
+      font-family: var(--mono);
+    }
+
+    .direct-color {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #2e3948;
+      background: #111722;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .style-toggle,
+    .align-btn {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 10px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .style-toggle.active,
+    .align-btn.active {
+      border-color: #3b82f6;
+      background: #18365d;
+      color: #eff6ff;
     }
 
     .slide-wrapper {
@@ -175,12 +319,46 @@
       pointer-events: none;
     }
 
+    .bbox-layer.inert .bbox-item {
+      pointer-events: none;
+      opacity: 0.26;
+    }
+
+    .object-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .object-outline {
+      position: absolute;
+      display: none;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .object-outline.hover {
+      border: 2px dashed rgba(96, 165, 250, 0.95);
+      background: rgba(96, 165, 250, 0.08);
+    }
+
+    .object-outline.selected {
+      border: 2px solid #60a5fa;
+      background: rgba(59, 130, 246, 0.14);
+      box-shadow: 0 0 0 2px rgba(191, 219, 254, 0.22);
+    }
+
     .draw-layer {
       position: absolute;
       inset: 0;
       z-index: 8;
       pointer-events: auto;
       cursor: crosshair;
+    }
+
+    .mode-select .draw-layer {
+      cursor: pointer;
     }
 
     .draw-box {
@@ -822,6 +1000,12 @@
         width: 390px;
         min-width: 300px;
       }
+      .slide-toolbox {
+        justify-content: flex-start;
+      }
+      .selected-object-chip {
+        max-width: 100%;
+      }
       .tool-row {
         flex-wrap: wrap;
       }
@@ -855,10 +1039,50 @@
 
     <div class="main-content">
       <div class="slide-panel" id="slide-panel">
+        <div class="slide-toolbox" id="slide-toolbox">
+          <div class="tool-mode-group">
+            <button type="button" class="tool-mode-btn active" id="tool-mode-draw" aria-pressed="true">Draw Boxes</button>
+            <button type="button" class="tool-mode-btn" id="tool-mode-select" aria-pressed="false">Select Object</button>
+          </div>
+          <div class="selected-object-chip empty" id="selected-object-chip">No object selected</div>
+          <div class="direct-edit-controls" id="direct-edit-controls" hidden>
+            <label class="direct-edit-group" for="object-text-input">
+              <span class="direct-edit-label">Text</span>
+              <input id="object-text-input" class="direct-input direct-text-input" type="text" placeholder="Selected text">
+            </label>
+            <label class="direct-edit-group" for="object-text-color">
+              <span class="direct-edit-label">Text</span>
+              <input id="object-text-color" class="direct-color" type="color" value="#111111" title="Text color">
+            </label>
+            <label class="direct-edit-group" for="object-bg-color">
+              <span class="direct-edit-label">Bg</span>
+              <input id="object-bg-color" class="direct-color" type="color" value="#ffffff" title="Background color">
+            </label>
+            <label class="direct-edit-group" for="object-font-size">
+              <span class="direct-edit-label">Size</span>
+              <input id="object-font-size" class="direct-number" type="number" min="8" max="180" step="1" value="24">
+            </label>
+            <div class="direct-toggle-group">
+              <button type="button" class="tool-mode-btn style-toggle" id="toggle-bold" title="Bold">B</button>
+              <button type="button" class="tool-mode-btn style-toggle" id="toggle-italic" title="Italic">I</button>
+              <button type="button" class="tool-mode-btn style-toggle" id="toggle-underline" title="Underline">U</button>
+              <button type="button" class="tool-mode-btn style-toggle" id="toggle-strike" title="Strikethrough">S</button>
+            </div>
+            <div class="direct-align-group">
+              <button type="button" class="tool-mode-btn align-btn" id="align-left" title="Align left">L</button>
+              <button type="button" class="tool-mode-btn align-btn" id="align-center" title="Align center">C</button>
+              <button type="button" class="tool-mode-btn align-btn" id="align-right" title="Align right">R</button>
+            </div>
+          </div>
+        </div>
         <div class="slide-wrapper" id="slide-wrapper">
           <button class="clear-overlay-btn" id="btn-clear-bboxes" title="Clear all boxes on current slide">Clear Boxes</button>
           <iframe id="slide-iframe" sandbox="allow-same-origin allow-scripts" loading="eager"></iframe>
           <div class="bbox-layer" id="bbox-layer"></div>
+          <div class="object-layer" id="object-layer">
+            <div class="object-outline hover" id="object-hover-box"></div>
+            <div class="object-outline selected" id="object-selected-box"></div>
+          </div>
           <div class="draw-layer" id="draw-layer">
             <div class="draw-box" id="draw-box"></div>
           </div>
@@ -883,7 +1107,7 @@
               <div class="context-chips" id="context-chip-list"></div>
               <span class="bbox-count" id="bbox-count">0 pending · 0 review</span>
             </div>
-            <div class="hint">Drag on the slide to add red pending bboxes. Cmd/Ctrl+Enter to run.</div>
+            <div class="hint" id="editor-hint">Drag on the slide to add red pending bboxes. Cmd/Ctrl+Enter to run.</div>
             <div class="prompt-shell">
               <textarea id="prompt-input" class="prompt-input" placeholder="Describe the edit for this slide..."></textarea>
               <div class="prompt-toolbar">
@@ -937,10 +1161,20 @@
 
     const SLIDE_W = 960;
     const SLIDE_H = 540;
+    const TOOL_MODE_DRAW = 'draw';
+    const TOOL_MODE_SELECT = 'select';
     const DEFAULT_MODELS = ['gpt-5.3-codex', 'gpt-5.3-codex-spark'];
+    const DIRECT_TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']);
+    const NON_SELECTABLE_TAGS = new Set(['html', 'head', 'body', 'script', 'style', 'link', 'meta', 'noscript']);
     let availableModels = DEFAULT_MODELS.slice();
     let defaultModel = DEFAULT_MODELS[0];
     let selectedModel = defaultModel;
+    let toolMode = TOOL_MODE_DRAW;
+    let hoveredObjectXPath = '';
+    let syncingDirectControls = false;
+
+    const directSaveStateBySlide = new Map();
+    const localFileUpdateBySlide = new Map();
 
     // -------------------------------------------------------------------------
     // DOM refs
@@ -953,10 +1187,29 @@
 
     const slideIframe = $('#slide-iframe');
     const slidePanel = $('#slide-panel');
+    const slideToolbox = $('#slide-toolbox');
     const slideWrapper = $('#slide-wrapper');
     const bboxLayer = $('#bbox-layer');
+    const objectLayer = $('#object-layer');
+    const objectHoverBox = $('#object-hover-box');
+    const objectSelectedBox = $('#object-selected-box');
     const drawLayer = $('#draw-layer');
     const drawBox = $('#draw-box');
+    const toolModeDrawBtn = $('#tool-mode-draw');
+    const toolModeSelectBtn = $('#tool-mode-select');
+    const selectedObjectChip = $('#selected-object-chip');
+    const directEditControls = $('#direct-edit-controls');
+    const objectTextInput = $('#object-text-input');
+    const objectTextColor = $('#object-text-color');
+    const objectBgColor = $('#object-bg-color');
+    const objectFontSize = $('#object-font-size');
+    const toggleBold = $('#toggle-bold');
+    const toggleItalic = $('#toggle-italic');
+    const toggleUnderline = $('#toggle-underline');
+    const toggleStrike = $('#toggle-strike');
+    const alignLeft = $('#align-left');
+    const alignCenter = $('#align-center');
+    const alignRight = $('#align-right');
 
     const chatMessagesEl = $('#chat-messages');
     const sessionFileChip = $('#session-file-chip');
@@ -967,6 +1220,7 @@
     const bboxCountEl = $('#bbox-count');
     const btnSend = $('#btn-send');
     const btnToggleLogs = $('#btn-toggle-logs');
+    const editorHint = $('#editor-hint');
 
     const runsSection = $('#runs-section');
     const runsListEl = $('#runs-list');
@@ -988,6 +1242,18 @@
 
     function clamp(v, min, max) {
       return Math.max(min, Math.min(max, v));
+    }
+
+    function getDirectSaveState(slide) {
+      if (!directSaveStateBySlide.has(slide)) {
+        directSaveStateBySlide.set(slide, {
+          timer: null,
+          pendingHtml: '',
+          pendingMessage: '',
+          chain: Promise.resolve(),
+        });
+      }
+      return directSaveStateBySlide.get(slide);
     }
 
     function escapeHtml(str) {
@@ -1012,6 +1278,31 @@
 
     function normalizeModelName(value) {
       return typeof value === 'string' ? value.trim() : '';
+    }
+
+    function normalizeHexColor(value, fallback = '#111111') {
+      if (typeof value !== 'string') return fallback;
+      const hexMatch = value.trim().match(/^#([0-9a-f]{6})$/i);
+      if (hexMatch) {
+        return `#${hexMatch[1].toLowerCase()}`;
+      }
+
+      const rgbMatch = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (!rgbMatch) return fallback;
+      const toHex = (part) => Number(part).toString(16).padStart(2, '0');
+      return `#${toHex(rgbMatch[1])}${toHex(rgbMatch[2])}${toHex(rgbMatch[3])}`;
+    }
+
+    function parsePixelValue(value, fallback = 24) {
+      const parsed = Number.parseFloat(String(value || '').replace('px', ''));
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.round(parsed);
+    }
+
+    function isBoldFontWeight(value) {
+      const numeric = Number.parseInt(value, 10);
+      if (Number.isFinite(numeric)) return numeric >= 600;
+      return /bold/i.test(String(value || ''));
     }
 
     function loadSavedModel() {
@@ -1091,6 +1382,7 @@
           messages: [],
           boxes: [],
           selectedBoxId: null,
+          selectedObjectXPath: '',
         });
       }
       return slideStates.get(slide);
@@ -1237,8 +1529,9 @@
     function scaleSlide() {
       const padX = 48;
       const padY = 48;
+      const toolboxHeight = slideToolbox?.offsetHeight || 0;
       const availW = slidePanel.clientWidth - padX;
-      const availH = slidePanel.clientHeight - padY;
+      const availH = slidePanel.clientHeight - padY - toolboxHeight;
       if (availW <= 0 || availH <= 0) return;
 
       const scale = Math.min(availW / SLIDE_W, availH / SLIDE_H) * 0.95;
@@ -1271,6 +1564,7 @@
           ].join('');
         })
         .join('');
+      bboxLayer.classList.toggle('inert', toolMode !== TOOL_MODE_DRAW);
 
       const pendingCount = state.boxes.filter((box) => normalizeBoxStatus(box.status) === 'pending').length;
       const reviewCount = state.boxes.length - pendingCount;
@@ -1319,6 +1613,7 @@
     }
 
     function startDrawing(event) {
+      if (toolMode !== TOOL_MODE_DRAW) return;
       if (event.button !== 0) return;
       event.preventDefault();
 
@@ -1332,6 +1627,7 @@
     }
 
     function moveDrawing(event) {
+      if (toolMode !== TOOL_MODE_DRAW) return;
       if (!drawing || !drawStart) return;
       const current = clientToSlidePoint(event.clientX, event.clientY);
 
@@ -1347,6 +1643,7 @@
     }
 
     function endDrawing(event) {
+      if (toolMode !== TOOL_MODE_DRAW) return;
       if (!drawing || !drawStart) return;
 
       const slide = currentSlideFile();
@@ -1393,6 +1690,7 @@
     }
 
     bboxLayer.addEventListener('click', (event) => {
+      if (toolMode !== TOOL_MODE_DRAW) return;
       const slide = currentSlideFile();
       if (!slide) return;
 
@@ -1543,6 +1841,338 @@
     }
 
     // -------------------------------------------------------------------------
+    // Direct object edit
+    // -------------------------------------------------------------------------
+    function resolveXPath(doc, xpath) {
+      if (!doc || typeof xpath !== 'string' || xpath.trim() === '') return null;
+      try {
+        return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      } catch {
+        return null;
+      }
+    }
+
+    function isElementNode(node) {
+      return Boolean(node) && node.nodeType === Node.ELEMENT_NODE;
+    }
+
+    function getSelectedObjectElement(slide = currentSlideFile()) {
+      if (!slide) return null;
+      const state = getSlideState(slide);
+      const xpath = state.selectedObjectXPath;
+      if (!xpath) return null;
+
+      const doc = slideIframe.contentDocument;
+      const el = resolveXPath(doc, xpath);
+      return isElementNode(el) ? el : null;
+    }
+
+    function isSelectableElement(el) {
+      if (!isElementNode(el)) return false;
+      const tag = el.tagName.toLowerCase();
+      if (NON_SELECTABLE_TAGS.has(tag)) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 1 && rect.height > 1;
+    }
+
+    function isTextEditableElement(el) {
+      if (!isElementNode(el)) return false;
+      const tag = el.tagName.toLowerCase();
+      if (!DIRECT_TEXT_TAGS.has(tag)) return false;
+      return el.children.length === 0;
+    }
+
+    function getSelectableTargetAt(clientX, clientY) {
+      const doc = slideIframe.contentDocument;
+      if (!doc) return null;
+
+      const point = clientToSlidePoint(clientX, clientY);
+      let node = doc.elementFromPoint(point.x, point.y);
+      while (node && !isSelectableElement(node)) {
+        node = node.parentElement;
+      }
+      return isElementNode(node) ? node : null;
+    }
+
+    function elementToSlideRect(el) {
+      if (!isElementNode(el)) return null;
+      const rect = el.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+      return {
+        x: clamp(Math.round(rect.left), 0, SLIDE_W),
+        y: clamp(Math.round(rect.top), 0, SLIDE_H),
+        width: Math.max(1, Math.round(rect.width)),
+        height: Math.max(1, Math.round(rect.height)),
+      };
+    }
+
+    function applyOverlayRect(node, rect) {
+      if (!node || !rect) {
+        if (node) node.style.display = 'none';
+        return;
+      }
+
+      node.style.display = 'block';
+      node.style.left = `${rect.x}px`;
+      node.style.top = `${rect.y}px`;
+      node.style.width = `${rect.width}px`;
+      node.style.height = `${rect.height}px`;
+    }
+
+    function getSelectedObjectSummary(el) {
+      if (!isElementNode(el)) return 'No object selected';
+      const tag = el.tagName.toLowerCase();
+      const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      return `${tag} · ${text || '(no text)'}`.slice(0, 72);
+    }
+
+    function readSelectedObjectStyleState(el) {
+      const frameWindow = slideIframe.contentWindow;
+      const styles = frameWindow?.getComputedStyle ? frameWindow.getComputedStyle(el) : null;
+      const textDecorationLine = styles?.textDecorationLine || '';
+      return {
+        textEditable: isTextEditableElement(el),
+        textValue: (el.textContent || '').trim(),
+        textColor: normalizeHexColor(styles?.color, '#111111'),
+        backgroundColor: normalizeHexColor(styles?.backgroundColor, '#ffffff'),
+        fontSize: parsePixelValue(styles?.fontSize, 24),
+        bold: isBoldFontWeight(styles?.fontWeight),
+        italic: styles?.fontStyle === 'italic',
+        underline: /\bunderline\b/.test(textDecorationLine),
+        strike: /\bline-through\b/.test(textDecorationLine),
+        textAlign: styles?.textAlign || 'left',
+      };
+    }
+
+    function setToggleActive(button, active) {
+      button.classList.toggle('active', Boolean(active));
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+
+    function updateSelectedObjectChip(text, empty = false) {
+      selectedObjectChip.textContent = text;
+      selectedObjectChip.classList.toggle('empty', empty);
+    }
+
+    function updateObjectEditorControls({ preserveTextInput = false } = {}) {
+      const wasHidden = directEditControls.hidden;
+      const selected = toolMode === TOOL_MODE_SELECT ? getSelectedObjectElement() : null;
+      directEditControls.hidden = !selected;
+
+      if (!selected) {
+        updateSelectedObjectChip('No object selected', true);
+        objectTextInput.value = '';
+        objectTextInput.disabled = true;
+        objectFontSize.value = '24';
+        objectTextColor.value = '#111111';
+        objectBgColor.value = '#ffffff';
+        setToggleActive(toggleBold, false);
+        setToggleActive(toggleItalic, false);
+        setToggleActive(toggleUnderline, false);
+        setToggleActive(toggleStrike, false);
+        setToggleActive(alignLeft, false);
+        setToggleActive(alignCenter, false);
+        setToggleActive(alignRight, false);
+        return;
+      }
+
+      const snapshot = readSelectedObjectStyleState(selected);
+      syncingDirectControls = true;
+      try {
+        updateSelectedObjectChip(getSelectedObjectSummary(selected), false);
+        objectTextInput.disabled = !snapshot.textEditable;
+        if (!preserveTextInput || document.activeElement !== objectTextInput) {
+          objectTextInput.value = snapshot.textEditable ? snapshot.textValue : '';
+        }
+        objectTextColor.value = snapshot.textColor;
+        objectBgColor.value = snapshot.backgroundColor;
+        objectFontSize.value = String(snapshot.fontSize);
+        setToggleActive(toggleBold, snapshot.bold);
+        setToggleActive(toggleItalic, snapshot.italic);
+        setToggleActive(toggleUnderline, snapshot.underline);
+        setToggleActive(toggleStrike, snapshot.strike);
+        setToggleActive(alignLeft, snapshot.textAlign === 'left' || snapshot.textAlign === 'start');
+        setToggleActive(alignCenter, snapshot.textAlign === 'center');
+        setToggleActive(alignRight, snapshot.textAlign === 'right' || snapshot.textAlign === 'end');
+      } finally {
+        syncingDirectControls = false;
+      }
+
+      if (wasHidden !== directEditControls.hidden) {
+        scaleSlide();
+      }
+    }
+
+    function renderObjectSelection() {
+      const selectedEl = toolMode === TOOL_MODE_SELECT ? getSelectedObjectElement() : null;
+      const hoveredEl = toolMode === TOOL_MODE_SELECT
+        ? resolveXPath(slideIframe.contentDocument, hoveredObjectXPath)
+        : null;
+
+      const selectedRect = selectedEl ? elementToSlideRect(selectedEl) : null;
+      const hoveredRect = hoveredEl && hoveredEl !== selectedEl ? elementToSlideRect(hoveredEl) : null;
+      applyOverlayRect(objectSelectedBox, selectedRect);
+      applyOverlayRect(objectHoverBox, hoveredRect);
+    }
+
+    function updateToolModeUI() {
+      const isDraw = toolMode === TOOL_MODE_DRAW;
+      slidePanel.classList.toggle('mode-draw', isDraw);
+      slidePanel.classList.toggle('mode-select', !isDraw);
+      toolModeDrawBtn.classList.toggle('active', isDraw);
+      toolModeSelectBtn.classList.toggle('active', !isDraw);
+      toolModeDrawBtn.setAttribute('aria-pressed', isDraw ? 'true' : 'false');
+      toolModeSelectBtn.setAttribute('aria-pressed', !isDraw ? 'true' : 'false');
+      editorHint.textContent = isDraw
+        ? 'Drag on the slide to add red pending bboxes. Cmd/Ctrl+Enter to run.'
+        : 'Click a slide object to edit its text and styles immediately.';
+      renderBboxes();
+      renderObjectSelection();
+      updateObjectEditorControls();
+      scaleSlide();
+    }
+
+    function setToolMode(mode) {
+      toolMode = mode === TOOL_MODE_SELECT ? TOOL_MODE_SELECT : TOOL_MODE_DRAW;
+      drawing = false;
+      drawStart = null;
+      drawBox.style.display = 'none';
+      if (toolMode !== TOOL_MODE_SELECT) {
+        hoveredObjectXPath = '';
+      }
+      updateToolModeUI();
+      setStatus(toolMode === TOOL_MODE_SELECT ? 'Select mode enabled.' : 'BBox draw mode enabled.');
+    }
+
+    function setSelectedObjectXPath(xpath, statusMessage = 'Object selected.') {
+      const slide = currentSlideFile();
+      if (!slide) return;
+      const state = getSlideState(slide);
+      state.selectedObjectXPath = xpath || '';
+      hoveredObjectXPath = xpath || '';
+      renderObjectSelection();
+      updateObjectEditorControls();
+      if (statusMessage) {
+        setStatus(statusMessage);
+      }
+    }
+
+    function updateHoveredObjectFromPointer(clientX, clientY) {
+      if (toolMode !== TOOL_MODE_SELECT) return;
+      const target = getSelectableTargetAt(clientX, clientY);
+      hoveredObjectXPath = target ? getXPath(target) : '';
+      renderObjectSelection();
+    }
+
+    function clearHoveredObject() {
+      hoveredObjectXPath = '';
+      renderObjectSelection();
+    }
+
+    function serializeSlideDocument(doc) {
+      if (!doc?.documentElement) return '';
+      const doctype = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>` : '<!DOCTYPE html>';
+      return `${doctype}\n${doc.documentElement.outerHTML}`;
+    }
+
+    async function persistDirectSlideHtml(slide, html, message) {
+      if (!slide || !html) return;
+
+      try {
+        const res = await fetch(`/api/slides/${encodeURIComponent(slide)}/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slide, html }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || `Save failed with HTTP ${res.status}`);
+        }
+
+        localFileUpdateBySlide.set(slide, Date.now());
+        if (slide === currentSlideFile()) {
+          setStatus(message || `${slide} saved.`);
+        }
+      } catch (error) {
+        addChatMessage('error', `[${slide}] Direct edit save failed: ${error.message}`, slide);
+        setStatus(`Error: ${error.message}`);
+      }
+    }
+
+    function queueDirectSave(slide, html, message) {
+      const saveState = getDirectSaveState(slide);
+      if (!html) return saveState.chain;
+      saveState.chain = saveState.chain
+        .catch(() => {})
+        .then(() => persistDirectSlideHtml(slide, html, message));
+      return saveState.chain;
+    }
+
+    function scheduleDirectSave(delay = 0, message = 'Object updated and saved.') {
+      const slide = currentSlideFile();
+      const html = serializeSlideDocument(slideIframe.contentDocument);
+      if (!slide || !html) return;
+
+      const saveState = getDirectSaveState(slide);
+      saveState.pendingHtml = html;
+      saveState.pendingMessage = message;
+      if (saveState.timer) {
+        window.clearTimeout(saveState.timer);
+      }
+      saveState.timer = window.setTimeout(() => {
+        saveState.timer = null;
+        const nextHtml = saveState.pendingHtml;
+        const nextMessage = saveState.pendingMessage;
+        saveState.pendingHtml = '';
+        queueDirectSave(slide, nextHtml, nextMessage);
+      }, Math.max(0, delay));
+    }
+
+    async function flushDirectSaveForSlide(slide) {
+      if (!slide) return;
+
+      const saveState = getDirectSaveState(slide);
+      if (saveState.timer) {
+        window.clearTimeout(saveState.timer);
+        saveState.timer = null;
+        const html = saveState.pendingHtml;
+        const message = saveState.pendingMessage;
+        saveState.pendingHtml = '';
+        await queueDirectSave(slide, html, message);
+        return;
+      }
+
+      await saveState.chain.catch(() => {});
+    }
+
+    function applyTextDecorationToken(el, token, shouldEnable) {
+      const frameWindow = slideIframe.contentWindow;
+      const styles = frameWindow?.getComputedStyle ? frameWindow.getComputedStyle(el) : null;
+      const parts = new Set(
+        String(styles?.textDecorationLine || '')
+          .split(/\s+/)
+          .filter((part) => part === 'underline' || part === 'line-through'),
+      );
+      if (shouldEnable) {
+        parts.add(token);
+      } else {
+        parts.delete(token);
+      }
+      el.style.textDecorationLine = parts.size > 0 ? Array.from(parts).join(' ') : 'none';
+    }
+
+    function mutateSelectedObject(mutator, message, { delay = 0, preserveTextInput = false } = {}) {
+      const selected = getSelectedObjectElement();
+      if (!selected) return;
+      mutator(selected);
+      renderObjectSelection();
+      updateObjectEditorControls({ preserveTextInput });
+      scheduleDirectSave(delay, message);
+      setStatus('Saving direct edit...');
+    }
+
+    // -------------------------------------------------------------------------
     // Send
     // -------------------------------------------------------------------------
     function updateSlideStatusChip() {
@@ -1590,6 +2220,8 @@
     async function applyChanges() {
       const slide = currentSlideFile();
       if (!slide) return;
+
+      await flushDirectSaveForSlide(slide);
 
       const state = getSlideState(slide);
       const prompt = (promptInput.value || '').trim();
@@ -1702,10 +2334,14 @@
       state.model = normalizeModelName(modelSelect.value) || state.model || defaultModel;
     }
 
-    function goToSlide(index) {
+    async function goToSlide(index) {
       if (index < 0 || index >= slides.length) return;
 
+      const previousSlide = currentSlideFile();
       persistCurrentSlideDraft();
+      if (previousSlide) {
+        await flushDirectSaveForSlide(previousSlide);
+      }
 
       currentIndex = index;
       const slide = currentSlideFile();
@@ -1722,8 +2358,11 @@
       selectedModel = state.model;
       modelSelect.value = selectedModel;
       promptInput.value = state.prompt || '';
+      hoveredObjectXPath = '';
       renderChatMessages();
       renderBboxes();
+      renderObjectSelection();
+      updateObjectEditorControls();
       updateSendState();
       setStatus(`Loaded ${slide}`);
     }
@@ -1852,6 +2491,11 @@
         try {
           const { file } = JSON.parse(event.data);
           if (file === currentSlideFile()) {
+            const updatedAt = localFileUpdateBySlide.get(file);
+            if (updatedAt && Date.now() - updatedAt < 2000) {
+              localFileUpdateBySlide.delete(file);
+              return;
+            }
             slideIframe.src = slideIframe.src;
           }
         } catch (error) {
@@ -1895,12 +2539,32 @@
     // -------------------------------------------------------------------------
     // Event wiring
     // -------------------------------------------------------------------------
-    btnPrev.addEventListener('click', () => goToSlide(currentIndex - 1));
-    btnNext.addEventListener('click', () => goToSlide(currentIndex + 1));
+    btnPrev.addEventListener('click', () => { void goToSlide(currentIndex - 1); });
+    btnNext.addEventListener('click', () => { void goToSlide(currentIndex + 1); });
+
+    toolModeDrawBtn.addEventListener('click', () => setToolMode(TOOL_MODE_DRAW));
+    toolModeSelectBtn.addEventListener('click', () => setToolMode(TOOL_MODE_SELECT));
 
     btnClearBboxes.addEventListener('click', clearBboxesForCurrentSlide);
 
     drawLayer.addEventListener('mousedown', startDrawing);
+    drawLayer.addEventListener('mousemove', (event) => {
+      if (toolMode !== TOOL_MODE_SELECT) return;
+      updateHoveredObjectFromPointer(event.clientX, event.clientY);
+    });
+    drawLayer.addEventListener('mouseleave', clearHoveredObject);
+    drawLayer.addEventListener('click', (event) => {
+      if (toolMode !== TOOL_MODE_SELECT) return;
+      const target = getSelectableTargetAt(event.clientX, event.clientY);
+      if (!target) {
+        setSelectedObjectXPath('', 'No selectable object at this point.');
+        return;
+      }
+
+      const xpath = getXPath(target);
+      const tag = target.tagName.toLowerCase();
+      setSelectedObjectXPath(xpath, `Selected ${tag} on ${currentSlideFile()}.`);
+    });
     window.addEventListener('mousemove', moveDrawing);
     window.addEventListener('mouseup', endDrawing);
 
@@ -1938,6 +2602,81 @@
       updateSendState();
     });
 
+    objectTextInput.addEventListener('input', () => {
+      if (syncingDirectControls || objectTextInput.disabled) return;
+      mutateSelectedObject((el) => {
+        el.textContent = objectTextInput.value;
+      }, 'Object text updated and saved.', { delay: 180, preserveTextInput: true });
+    });
+
+    objectFontSize.addEventListener('input', () => {
+      if (syncingDirectControls) return;
+      const size = clamp(Number.parseInt(objectFontSize.value || '24', 10) || 24, 8, 180);
+      mutateSelectedObject((el) => {
+        el.style.fontSize = `${size}px`;
+      }, 'Object font size updated and saved.');
+    });
+
+    objectTextColor.addEventListener('input', () => {
+      if (syncingDirectControls) return;
+      mutateSelectedObject((el) => {
+        el.style.color = objectTextColor.value;
+      }, 'Object text color updated and saved.');
+    });
+
+    objectBgColor.addEventListener('input', () => {
+      if (syncingDirectControls) return;
+      mutateSelectedObject((el) => {
+        el.style.backgroundColor = objectBgColor.value;
+      }, 'Object background color updated and saved.');
+    });
+
+    toggleBold.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        const nextBold = !readSelectedObjectStyleState(el).bold;
+        el.style.fontWeight = nextBold ? '700' : '400';
+      }, 'Object font weight updated and saved.');
+    });
+
+    toggleItalic.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        const nextItalic = !readSelectedObjectStyleState(el).italic;
+        el.style.fontStyle = nextItalic ? 'italic' : 'normal';
+      }, 'Object font style updated and saved.');
+    });
+
+    toggleUnderline.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        const nextUnderline = !readSelectedObjectStyleState(el).underline;
+        applyTextDecorationToken(el, 'underline', nextUnderline);
+      }, 'Object underline updated and saved.');
+    });
+
+    toggleStrike.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        const nextStrike = !readSelectedObjectStyleState(el).strike;
+        applyTextDecorationToken(el, 'line-through', nextStrike);
+      }, 'Object strikethrough updated and saved.');
+    });
+
+    alignLeft.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        el.style.textAlign = 'left';
+      }, 'Object alignment updated and saved.');
+    });
+
+    alignCenter.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        el.style.textAlign = 'center';
+      }, 'Object alignment updated and saved.');
+    });
+
+    alignRight.addEventListener('click', () => {
+      mutateSelectedObject((el) => {
+        el.style.textAlign = 'right';
+      }, 'Object alignment updated and saved.');
+    });
+
     document.addEventListener('keydown', (event) => {
       const inTextarea = document.activeElement === promptInput;
 
@@ -1955,16 +2694,26 @@
 
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        goToSlide(currentIndex - 1);
+        void goToSlide(currentIndex - 1);
       } else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        goToSlide(currentIndex + 1);
+        void goToSlide(currentIndex + 1);
       }
     });
 
     window.addEventListener('resize', scaleSlide);
     slideIframe.addEventListener('load', () => {
+      const slide = currentSlideFile();
+      if (slide) {
+        const state = getSlideState(slide);
+        if (state.selectedObjectXPath && !getSelectedObjectElement(slide)) {
+          state.selectedObjectXPath = '';
+        }
+      }
+      hoveredObjectXPath = '';
       renderBboxes();
+      renderObjectSelection();
+      updateObjectEditorControls();
       updateSendState();
     });
 
@@ -1990,7 +2739,8 @@
         }
 
         await loadModelOptions();
-        goToSlide(0);
+        updateToolModeUI();
+        await goToSlide(0);
         scaleSlide();
         await loadRunsInitial();
         connectSSE();
