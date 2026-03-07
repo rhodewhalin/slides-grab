@@ -384,6 +384,7 @@ async function startServer(opts) {
 
   const app = express();
   app.use(express.json({ limit: '5mb' }));
+  app.use('/js', express.static(join(PACKAGE_ROOT, 'src', 'editor', 'js')));
 
   const editorHtmlPath = join(PACKAGE_ROOT, 'src', 'editor', 'editor.html');
 

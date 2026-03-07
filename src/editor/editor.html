@@ -5,24 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slide Editor - ppt-agent</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.css">
   <style>
     :root {
-      --bg-0: #0d1117;
-      --bg-1: #121820;
-      --panel: #161b22;
-      --panel-2: #0f141a;
-      --border: #2a3038;
-      --border-soft: #20262e;
-      --text-0: #e6edf3;
-      --text-1: #9aa4b2;
-      --text-2: #6f7a88;
+      --bg-0: #030711;
+      --bg-1: #0a0f1a;
+      --panel: #0f172a;
+      --panel-2: #020617;
+      --border: #1e293b;
+      --border-soft: #172033;
+      --text-0: #f8fafc;
+      --text-1: #94a3b8;
+      --text-2: #64748b;
       --accent: #3b82f6;
       --accent-2: #60a5fa;
       --danger: #ef4444;
       --success: #22c55e;
       --warn: #f59e0b;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+      --sans: 'Geist Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --ring: hsla(213, 27%, 84%, 0.15);
+      --radius: 8px;
+      --radius-sm: 6px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2);
+      --transition: 150ms ease-out;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,7 +39,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: radial-gradient(1400px 900px at 0% -20%, #18212d 0%, #0d1117 50%, #0b0f14 100%);
+      background: var(--bg-0);
       font-family: var(--sans);
       color: var(--text-0);
       letter-spacing: 0.01em;
@@ -46,7 +54,7 @@
 
     .nav-bar {
       height: 48px;
-      background: #0f141a;
+      background: var(--panel-2);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -63,23 +71,23 @@
     }
 
     .nav-bar button {
-      background: #202a36;
+      background: var(--panel);
       color: var(--text-0);
-      border: 1px solid #2b3643;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       padding: 6px 12px;
       font-size: 12px;
       font-family: inherit;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition);
     }
 
-    .nav-bar button:hover { background: #2a3646; }
+    .nav-bar button:hover { background: var(--border); }
     .nav-bar button:disabled { opacity: 0.3; cursor: default; }
-    .nav-bar button:disabled:hover { background: #202a36; }
+    .nav-bar button:disabled:hover { background: var(--panel); }
 
     .slide-counter {
-      color: #b6c2cf;
+      color: var(--text-1);
       font-size: 12px;
       font-weight: 600;
       min-width: 84px;
@@ -101,27 +109,27 @@
     }
 
     .slide-status-chip.idle {
-      color: #8b97a6;
-      background: #1a212c;
-      border-color: #2a313c;
+      color: var(--text-2);
+      background: var(--panel);
+      border-color: var(--border);
     }
 
     .slide-status-chip.running {
       color: #fbbf24;
-      background: #2f2512;
-      border-color: #4f3d1d;
+      background: hsl(40 80% 12%);
+      border-color: hsl(40 50% 22%);
     }
 
     .slide-status-chip.success {
       color: #4ade80;
-      background: #12251a;
-      border-color: #204432;
+      background: hsl(150 40% 10%);
+      border-color: hsl(150 35% 18%);
     }
 
     .slide-status-chip.failed {
       color: #f87171;
-      background: #321517;
-      border-color: #552125;
+      background: hsl(0 50% 12%);
+      border-color: hsl(0 40% 20%);
     }
 
     .brand {
@@ -145,7 +153,7 @@
       min-width: 0;
       overflow: hidden;
       padding: 12px;
-      background: linear-gradient(180deg, #0f141b 0%, #0d1218 100%);
+      background: var(--bg-0);
     }
 
     .slide-toolbox {
@@ -154,10 +162,10 @@
       flex-direction: column;
       gap: 10px;
       padding: 14px 16px 12px;
-      border: 1px solid #293444;
-      border-radius: 20px;
-      background: rgba(15, 21, 29, 0.94);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--panel-2);
+      box-shadow: var(--shadow-card);
       position: relative;
       z-index: 20;
       align-self: center;
@@ -245,17 +253,17 @@
     }
 
     .tool-mode-btn {
-      border: 1px solid #2c3847;
-      background: #18212c;
-      color: #d6e1ec;
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
+      border-radius: var(--radius-lg);
       height: 46px;
       padding: 0 16px;
       font-size: 12px;
       font-family: var(--mono);
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: all var(--transition);
       flex: 0 0 auto;
       display: inline-flex;
       align-items: center;
@@ -264,21 +272,21 @@
     }
 
     .tool-mode-btn:hover {
-      background: #212d3a;
+      background: var(--border);
     }
 
     .tool-mode-btn.active {
-      border-color: #3963a4;
-      background: #1d3355;
-      color: #e8f0fb;
+      border-color: var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
     }
 
     .tool-icon-btn {
       position: relative;
-      border: 1px solid #2c3847;
-      background: #141c26;
-      color: #d9e5f3;
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-0);
+      border-radius: var(--radius-lg);
       min-width: 46px;
       height: 46px;
       padding: 0 12px;
@@ -286,7 +294,7 @@
       font-family: var(--mono);
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+      transition: all var(--transition);
       flex: 0 0 auto;
       display: inline-flex;
       align-items: center;
@@ -294,24 +302,24 @@
     }
 
     .tool-icon-btn:hover {
-      background: #1b2430;
+      background: var(--panel);
     }
 
     .tool-icon-btn.active {
-      border-color: #3b82f6;
-      background: #18365d;
-      color: #eff6ff;
+      border-color: var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
     }
 
     .tool-icon-btn:disabled {
       opacity: 0.42;
       cursor: default;
-      color: #8392a5;
-      background: #121922;
+      color: var(--text-2);
+      background: var(--panel-2);
     }
 
     .tool-icon-btn:disabled:hover {
-      background: #121922;
+      background: var(--panel-2);
     }
 
     .tool-icon-btn.tight {
@@ -342,9 +350,9 @@
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      border: 1px solid #2f3c4d;
-      background: #111a24;
-      color: #d9e4ef;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       padding: 0 10px;
       font-size: 11px;
       font-family: var(--mono);
@@ -356,8 +364,8 @@
 
     .selected-object-chip.empty {
       color: var(--text-2);
-      border-color: #26303b;
-      background: #0f151d;
+      border-color: var(--border-soft);
+      background: var(--panel-2);
     }
 
     .direct-edit-controls {
@@ -384,10 +392,10 @@
     .direct-input,
     .direct-number {
       height: 32px;
-      border-radius: 8px;
-      border: 1px solid #2e3948;
-      background: #0f141a;
-      color: #e6edf3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-0);
       font-size: 12px;
       font-family: var(--sans);
       padding: 0 10px;
@@ -396,7 +404,8 @@
 
     .direct-input:focus,
     .direct-number:focus {
-      border-color: #496a94;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring);
     }
 
     .direct-text-input {
@@ -411,9 +420,9 @@
     .direct-color {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      border: 1px solid #2e3948;
-      background: #111722;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
       cursor: pointer;
       padding: 2px;
     }
@@ -429,9 +438,9 @@
 
     .style-toggle.active,
     .align-btn.active {
-      border-color: #3b82f6;
-      background: #18365d;
-      color: #eff6ff;
+      border-color: var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
     }
 
     .slide-wrapper {
@@ -623,19 +632,19 @@
       top: 10px;
       right: 10px;
       z-index: 12;
-      border: 1px solid #2f3946;
-      background: rgba(16, 22, 30, 0.88);
-      color: #dbe5f0;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: hsla(215, 28%, 8%, 0.88);
+      color: var(--text-0);
+      border-radius: var(--radius-sm);
       padding: 6px 10px;
       font-size: 12px;
       font-family: var(--mono);
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition);
     }
 
     .clear-overlay-btn:hover {
-      background: rgba(26, 35, 47, 0.95);
+      background: hsla(215, 28%, 14%, 0.95);
     }
 
     .clear-overlay-btn:disabled {
@@ -644,14 +653,14 @@
     }
 
     .clear-overlay-btn:disabled:hover {
-      background: rgba(16, 22, 30, 0.88);
+      background: hsla(215, 28%, 8%, 0.88);
     }
 
     .sidebar {
       width: 430px;
       min-width: 340px;
       border-left: 1px solid var(--border);
-      background: linear-gradient(180deg, #11161d 0%, #0d1218 100%);
+      background: var(--bg-1);
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -671,7 +680,7 @@
       justify-content: space-between;
       padding: 0 12px;
       border-bottom: 1px solid var(--border);
-      background: #0f141a;
+      background: var(--panel-2);
     }
 
     .header-tabs {
@@ -706,26 +715,26 @@
     }
 
     .btn-toggle-logs {
-      background: #1b2430;
-      color: #c8d3df;
-      border: 1px solid #2e3948;
-      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       height: 26px;
       padding: 0 8px;
       font-size: 11px;
       font-family: var(--mono);
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition);
     }
 
     .btn-toggle-logs:hover {
-      background: #253142;
+      background: var(--border);
     }
 
     .btn-toggle-logs.active {
-      border-color: #3d5168;
-      color: #e6edf3;
-      background: #233144;
+      border-color: var(--accent);
+      color: var(--text-0);
+      background: hsl(217 91% 60% / 0.12);
     }
 
     .session-strip {
@@ -735,7 +744,7 @@
       align-items: center;
       gap: 6px;
       min-height: 38px;
-      background: #11161d;
+      background: var(--bg-1);
       overflow-x: auto;
     }
 
@@ -744,10 +753,10 @@
       display: inline-flex;
       align-items: center;
       height: 22px;
-      border-radius: 6px;
-      border: 1px solid #2f3b4a;
-      background: #1a2432;
-      color: #d6e1ec;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       padding: 0 8px;
       font-size: 11px;
       font-family: var(--mono);
@@ -765,7 +774,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      background: #0f141a;
+      background: var(--panel-2);
     }
 
     .chat-messages:empty::before {
@@ -776,29 +785,29 @@
     }
 
     .message {
-      border: 1px solid #242c36;
-      border-radius: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       padding: 10px;
       font-size: 12px;
       line-height: 1.5;
-      color: #d5dee8;
+      color: var(--text-0);
       white-space: pre-wrap;
-      background: #141a22;
+      background: var(--panel);
     }
 
     .message.user {
-      border-color: #2b4670;
-      background: #152033;
+      border-color: hsl(217 50% 28%);
+      background: hsl(217 55% 14%);
     }
 
     .message.system {
-      border-color: #2e4f39;
-      background: #14231a;
+      border-color: hsl(150 30% 22%);
+      background: hsl(150 30% 10%);
     }
 
     .message.error {
-      border-color: #5a2229;
-      background: #2a171b;
+      border-color: hsl(0 40% 22%);
+      background: hsl(0 40% 12%);
     }
 
     .composer {
@@ -807,7 +816,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      background: #11161d;
+      background: var(--bg-1);
     }
 
     .tool-row {
@@ -820,12 +829,12 @@
 
     .btn {
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 7px 10px;
       font-size: 12px;
       font-family: var(--sans);
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -872,10 +881,10 @@
       align-items: center;
       gap: 4px;
       height: 22px;
-      border-radius: 6px;
-      border: 1px solid #2e3948;
-      background: #18212c;
-      color: #cdd7e1;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       padding: 0 8px;
       font-size: 11px;
       font-family: var(--mono);
@@ -887,21 +896,21 @@
     }
 
     .context-chip.file {
-      border-color: #314055;
-      background: #1a2636;
-      color: #deebfa;
+      border-color: var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       cursor: default;
     }
 
     .context-chip.pending {
-      border-color: #5a252b;
-      background: #2e171b;
+      border-color: hsl(0 40% 22%);
+      background: hsl(0 40% 12%);
       color: #fecaca;
     }
 
     .context-chip.review {
-      border-color: #234334;
-      background: #13281e;
+      border-color: hsl(150 30% 18%);
+      background: hsl(150 30% 10%);
       color: #bbf7d0;
     }
 
@@ -921,10 +930,10 @@
       width: 100%;
       min-width: 0;
       height: 46px;
-      border-radius: 12px;
-      border: 1px solid #2e3948;
-      background: #0f141a;
-      color: #e6edf3;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-0);
       font-size: 13px;
       font-family: var(--sans);
       line-height: 1;
@@ -933,11 +942,12 @@
     }
 
     .prompt-input:focus {
-      border-color: #3c4e63;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring);
     }
 
     .prompt-input::placeholder {
-      color: #627183;
+      color: var(--text-2);
     }
 
     .hint {
@@ -950,10 +960,10 @@
       min-width: 176px;
       width: 176px;
       height: 46px;
-      border-radius: 12px;
-      border: 1px solid #2f3b4a;
-      background: #111722;
-      color: #e6edf3;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       font-size: 12px;
       font-family: var(--mono);
       padding: 0 8px;
@@ -961,21 +971,22 @@
     }
 
     .model-select:focus {
-      border-color: #4f6d8f;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring);
     }
 
     .btn-send {
-      background: linear-gradient(180deg, #2754a7 0%, #1d3f84 100%);
-      color: #dce7f6;
+      background: var(--accent);
+      color: #fff;
       min-width: 46px;
       width: 46px;
       height: 46px;
       padding: 0;
-      border: 1px solid #304f85;
-      border-radius: 12px;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-lg);
     }
 
-    .btn-send:hover { background: linear-gradient(180deg, #2d63c8 0%, #224a99 100%); }
+    .btn-send:hover { background: var(--accent-2); }
 
     .btn-send-icon {
       width: 14px;
@@ -998,14 +1009,20 @@
       top: 0;
       width: 248px;
       padding: 12px;
-      border-radius: 14px;
-      border: 1px solid #2f3b4a;
-      background: rgba(15, 21, 29, 0.98);
-      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      box-shadow: var(--shadow-card);
       display: flex;
       align-items: flex-end;
       gap: 10px;
       pointer-events: auto;
+      animation: fadeIn var(--transition) forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
     }
 
     .editor-popover[hidden] {
@@ -1021,7 +1038,7 @@
     }
 
     .popover-label {
-      color: #dbe6f3;
+      color: var(--text-0);
       font-size: 11px;
       font-weight: 700;
       font-family: var(--mono);
@@ -1033,10 +1050,10 @@
     .popover-number,
     .popover-color {
       width: 100%;
-      border-radius: 10px;
-      border: 1px solid #2f3b4a;
-      background: #111722;
-      color: #e6edf3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-0);
       font-size: 13px;
       font-family: var(--sans);
       outline: none;
@@ -1056,7 +1073,8 @@
 
     .popover-input:focus,
     .popover-number:focus {
-      border-color: #4f6d8f;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring);
     }
 
     .popover-actions {
@@ -1066,16 +1084,17 @@
     }
 
     .popover-apply-btn {
-      border: 1px solid #3b82f6;
-      background: #18365d;
-      color: #eff6ff;
-      border-radius: 10px;
+      border: 1px solid var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
+      border-radius: var(--radius);
       height: 34px;
       padding: 0 12px;
       font-size: 12px;
       font-family: var(--mono);
       font-weight: 700;
       cursor: pointer;
+      transition: all var(--transition);
     }
 
     .hint {
@@ -1088,7 +1107,7 @@
     .runs-section {
       border-top: 1px solid var(--border);
       padding: 10px;
-      background: #0f141a;
+      background: var(--panel-2);
       max-height: 36%;
       min-height: 130px;
       display: flex;
@@ -1118,10 +1137,10 @@
     }
 
     .run-item {
-      border: 1px solid #2a3340;
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       padding: 8px;
-      background: #121923;
+      background: var(--panel);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -1149,7 +1168,7 @@
     .run-dot.idle { background: #6b7280; }
 
     .run-slide {
-      color: #dce6f2;
+      color: var(--text-0);
       font-weight: 600;
       word-break: break-all;
     }
@@ -1168,26 +1187,26 @@
     }
 
     .btn-log {
-      background: #1e2733;
-      color: #cfd9e5;
+      background: var(--panel);
+      color: var(--text-1);
       font-size: 11px;
       padding: 5px 8px;
-      border: 1px solid #2d3948;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       font-family: var(--mono);
     }
 
-    .btn-log:hover { background: #2a3646; }
+    .btn-log:hover { background: var(--border); }
 
     .run-log {
       white-space: pre-wrap;
-      background: #0d131b;
-      border: 1px solid #263240;
-      border-radius: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       padding: 8px;
       font-size: 11px;
       line-height: 1.45;
-      color: #d6e1ec;
+      color: var(--text-0);
       max-height: 180px;
       overflow: auto;
       font-family: var(--mono);
@@ -1195,7 +1214,7 @@
 
     .status-bar {
       height: 28px;
-      background: #0f141a;
+      background: var(--panel-2);
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -1211,7 +1230,7 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #555;
+      background: var(--text-2);
       display: inline-block;
       margin-right: 6px;
     }
@@ -1233,7 +1252,8 @@
       width: 280px;
       min-width: 280px;
       border-left: 1px solid var(--border);
-      background: linear-gradient(180deg, #11161d 0%, #0d1218 100%);
+      background: var(--bg-1);
+      box-shadow: var(--shadow-card);
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -1249,15 +1269,15 @@
     .sidebar-mode-tab {
       flex: 1;
       height: 38px;
-      border: 1px solid #2c3847;
-      background: #18212c;
-      color: #b0bcc9;
-      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-1);
+      border-radius: var(--radius);
       font-size: 12px;
       font-family: var(--mono);
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: all var(--transition);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1269,12 +1289,12 @@
       height: 14px;
     }
 
-    .sidebar-mode-tab:hover { background: #212d3a; }
+    .sidebar-mode-tab:hover { background: var(--border); }
 
     .sidebar-mode-tab.active {
-      border-color: #3963a4;
-      background: #1d3355;
-      color: #e8f0fb;
+      border-color: var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
     }
 
     .sidebar-body {
@@ -1318,10 +1338,10 @@
     .sidebar-textarea {
       width: 100%;
       min-height: 68px;
-      border-radius: 10px;
-      border: 1px solid #2e3948;
-      background: #0f141a;
-      color: #e6edf3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-0);
       font-size: 13px;
       font-family: var(--sans);
       padding: 10px 12px;
@@ -1330,26 +1350,26 @@
       line-height: 1.45;
     }
 
-    .sidebar-textarea:focus { border-color: #3c4e63; }
-    .sidebar-textarea::placeholder { color: #627183; }
+    .sidebar-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+    .sidebar-textarea::placeholder { color: var(--text-2); }
 
     .editor-sidebar .model-select {
       width: 100%;
       min-width: 0;
       height: 38px;
-      border-radius: 10px;
+      border-radius: var(--radius);
     }
 
     .sidebar-btn {
       width: 100%;
       height: 40px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius);
       font-size: 13px;
       font-family: var(--sans);
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1359,13 +1379,13 @@
     .sidebar-btn:disabled { opacity: 0.35; cursor: default; }
 
     .sidebar-btn-primary {
-      background: linear-gradient(180deg, #2754a7 0%, #1d3f84 100%);
-      color: #dce7f6;
-      border: 1px solid #304f85;
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--accent);
     }
 
     .sidebar-btn-primary:hover:not(:disabled) {
-      background: linear-gradient(180deg, #2d63c8 0%, #224a99 100%);
+      background: var(--accent-2);
     }
 
     .sidebar-btn-primary .btn-send-icon {
@@ -1378,10 +1398,10 @@
       flex: 1;
       min-width: 0;
       height: 34px;
-      border-radius: 8px;
-      border: 1px solid #2e3948;
-      background: #0f141a;
-      color: #e6edf3;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-0);
       font-size: 12px;
       font-family: var(--sans);
       padding: 0 10px;
@@ -1394,7 +1414,7 @@
       line-height: 1.5;
     }
 
-    .sidebar-input:focus { border-color: #496a94; }
+    .sidebar-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
     .sidebar-input:disabled { opacity: 0.4; cursor: default; }
 
     .sidebar-number {
@@ -1418,18 +1438,19 @@
     .sidebar-btn-sm {
       height: 34px;
       padding: 0 12px;
-      border-radius: 8px;
-      border: 1px solid #3b82f6;
-      background: #18365d;
-      color: #eff6ff;
+      border-radius: var(--radius);
+      border: 1px solid var(--accent);
+      background: hsl(217 91% 60% / 0.12);
+      color: var(--text-0);
       font-size: 11px;
       font-family: var(--mono);
       font-weight: 700;
       cursor: pointer;
       flex: 0 0 auto;
+      transition: all var(--transition);
     }
 
-    .sidebar-btn-sm:hover:not(:disabled) { background: #1d4173; }
+    .sidebar-btn-sm:hover:not(:disabled) { background: hsl(217 91% 60% / 0.2); }
     .sidebar-btn-sm:disabled { opacity: 0.35; cursor: default; }
 
     .sidebar-color-row {
@@ -1454,9 +1475,9 @@
     .sidebar-color {
       width: 100%;
       height: 36px;
-      border-radius: 8px;
-      border: 1px solid #2e3948;
-      background: #111722;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
       cursor: pointer;
       padding: 3px;
     }
@@ -1472,7 +1493,7 @@
     .editor-sidebar .tool-icon-btn {
       min-width: 38px;
       height: 38px;
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 0 8px;
     }
 
@@ -1486,10 +1507,10 @@
       display: flex;
       align-items: center;
       padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #2f3c4d;
-      background: #111a24;
-      color: #9aa8b8;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-1);
       font-size: 11px;
       font-family: var(--mono);
       overflow: hidden;
@@ -1521,6 +1542,11 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    :focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--ring);
     }
 
     @media (max-width: 1380px) {
@@ -1692,1581 +1718,6 @@
     </div>
   </div>
 
-  <script>
-    // -------------------------------------------------------------------------
-    // State
-    // -------------------------------------------------------------------------
-    let slides = [];
-    let currentIndex = 0;
-    let drawStart = null;
-    let drawing = false;
-    const slideStates = new Map();
-    const activeRunBySlide = new Map();
-    const pendingRequestBySlide = new Set();
-
-    const runsById = new Map();
-
-    const SLIDE_W = 960;
-    const SLIDE_H = 540;
-    const TOOL_MODE_DRAW = 'draw';
-    const TOOL_MODE_SELECT = 'select';
-    const POPOVER_TEXT = 'text';
-    const POPOVER_TEXT_COLOR = 'text-color';
-    const POPOVER_BG_COLOR = 'bg-color';
-    const POPOVER_SIZE = 'size';
-    const DEFAULT_MODELS = ['gpt-5.3-codex', 'gpt-5.3-codex-spark'];
-    const DIRECT_TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']);
-    const NON_SELECTABLE_TAGS = new Set(['html', 'head', 'body', 'script', 'style', 'link', 'meta', 'noscript']);
-    let availableModels = DEFAULT_MODELS.slice();
-    let defaultModel = DEFAULT_MODELS[0];
-    let selectedModel = defaultModel;
-    let toolMode = TOOL_MODE_DRAW;
-    let hoveredObjectXPath = '';
-
-    const directSaveStateBySlide = new Map();
-    const localFileUpdateBySlide = new Map();
-
-    // -------------------------------------------------------------------------
-    // DOM refs
-    // -------------------------------------------------------------------------
-    const $ = (sel) => document.querySelector(sel);
-    const btnPrev = $('#btn-prev');
-    const btnNext = $('#btn-next');
-    const slideCounter = $('#slide-counter');
-    const slideStatusChip = $('#slide-status-chip');
-
-    const slideIframe = $('#slide-iframe');
-    const slidePanel = $('#slide-panel');
-    const slideStage = $('#slide-stage');
-    const slideWrapper = $('#slide-wrapper');
-    const bboxLayer = $('#bbox-layer');
-    const objectLayer = $('#object-layer');
-    const objectHoverBox = $('#object-hover-box');
-    const objectSelectedBox = $('#object-selected-box');
-    const drawLayer = $('#draw-layer');
-    const drawBox = $('#draw-box');
-    const toolModeDrawBtn = $('#tool-mode-draw');
-    const toolModeSelectBtn = $('#tool-mode-select');
-    const bboxToolbar = $('#bbox-toolbar');
-    const selectToolbar = $('#select-toolbar');
-    // Inline sidebar inputs (no popover trigger buttons needed)
-    const toggleBold = $('#toggle-bold');
-    const toggleItalic = $('#toggle-italic');
-    const toggleUnderline = $('#toggle-underline');
-    const toggleStrike = $('#toggle-strike');
-    const alignLeft = $('#align-left');
-    const alignCenter = $('#align-center');
-    const alignRight = $('#align-right');
-    const popoverTextInput = $('#popover-text-input');
-    const popoverApplyText = $('#popover-apply-text');
-    const popoverTextColorInput = $('#popover-text-color-input');
-    const popoverBgColorInput = $('#popover-bg-color-input');
-    const popoverSizeInput = $('#popover-size-input');
-    const popoverApplySize = $('#popover-apply-size');
-
-    const chatMessagesEl = $('#chat-messages');
-    const sessionFileChip = $('#session-file-chip');
-    const contextChipList = $('#context-chip-list');
-    const promptInput = $('#prompt-input');
-    const modelSelect = $('#model-select');
-    const btnClearBboxes = $('#btn-clear-bboxes');
-    const bboxCountEl = $('#bbox-count');
-    const btnSend = $('#btn-send');
-    const editorHint = $('#editor-hint');
-    const selectedObjectMini = $('#selected-object-mini');
-    const miniTag = $('#mini-tag');
-    const miniText = $('#mini-text');
-    const selectEmptyHint = $('#select-empty-hint');
-
-    const statusDot = $('#status-dot');
-    const statusConn = $('#status-connection');
-    const statusMsg = $('#status-message');
-
-    // -------------------------------------------------------------------------
-    // Utils
-    // -------------------------------------------------------------------------
-    function setStatus(message) {
-      statusMsg.textContent = message;
-    }
-
-    function currentSlideFile() {
-      return slides[currentIndex] || null;
-    }
-
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
-
-    function getDirectSaveState(slide) {
-      if (!directSaveStateBySlide.has(slide)) {
-        directSaveStateBySlide.set(slide, {
-          timer: null,
-          pendingHtml: '',
-          pendingMessage: '',
-          chain: Promise.resolve(),
-        });
-      }
-      return directSaveStateBySlide.get(slide);
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function formatTime(iso) {
-      if (!iso) return '-';
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return iso;
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-
-    function randomId(prefix) {
-      return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-    }
-
-    function normalizeModelName(value) {
-      return typeof value === 'string' ? value.trim() : '';
-    }
-
-    function normalizeHexColor(value, fallback = '#111111') {
-      if (typeof value !== 'string') return fallback;
-      const hexMatch = value.trim().match(/^#([0-9a-f]{6})$/i);
-      if (hexMatch) {
-        return `#${hexMatch[1].toLowerCase()}`;
-      }
-
-      const rgbMatch = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-      if (!rgbMatch) return fallback;
-      const toHex = (part) => Number(part).toString(16).padStart(2, '0');
-      return `#${toHex(rgbMatch[1])}${toHex(rgbMatch[2])}${toHex(rgbMatch[3])}`;
-    }
-
-    function parsePixelValue(value, fallback = 24) {
-      const parsed = Number.parseFloat(String(value || '').replace('px', ''));
-      if (!Number.isFinite(parsed)) return fallback;
-      return Math.round(parsed);
-    }
-
-    function isBoldFontWeight(value) {
-      const numeric = Number.parseInt(value, 10);
-      if (Number.isFinite(numeric)) return numeric >= 600;
-      return /bold/i.test(String(value || ''));
-    }
-
-    function loadSavedModel() {
-      try {
-        return normalizeModelName(window.localStorage.getItem('ppt-agent-editor-model'));
-      } catch {
-        return '';
-      }
-    }
-
-    function saveSelectedModel(model) {
-      try {
-        window.localStorage.setItem('ppt-agent-editor-model', model);
-      } catch {
-        // ignore
-      }
-    }
-
-    function setModelOptions(models, preferredModel = '') {
-      const list = Array.isArray(models)
-        ? models
-          .map((name) => normalizeModelName(name))
-          .filter((name) => name !== '')
-        : [];
-      const uniqueModels = Array.from(new Set(list));
-
-      availableModels = uniqueModels.length > 0 ? uniqueModels : DEFAULT_MODELS.slice();
-
-      const preferred = normalizeModelName(preferredModel);
-      const saved = loadSavedModel();
-
-      if (availableModels.includes(preferred)) {
-        selectedModel = preferred;
-      } else if (availableModels.includes(saved)) {
-        selectedModel = saved;
-      } else {
-        selectedModel = availableModels[0];
-      }
-
-      defaultModel = selectedModel;
-
-      modelSelect.innerHTML = availableModels
-        .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
-        .join('');
-      modelSelect.value = selectedModel;
-      saveSelectedModel(selectedModel);
-    }
-
-    async function loadModelOptions() {
-      const saved = loadSavedModel();
-
-      try {
-        const res = await fetch('/api/models');
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const payload = await res.json();
-        const serverModels = Array.isArray(payload.models) ? payload.models : [];
-        const serverDefault = normalizeModelName(payload.defaultModel);
-
-        setModelOptions(serverModels, saved || serverDefault);
-      } catch {
-        setModelOptions(DEFAULT_MODELS, saved);
-      }
-    }
-
-    function normalizeBoxStatus(status) {
-      return status === 'review' ? 'review' : 'pending';
-    }
-
-    function getSlideState(slide) {
-      if (!slideStates.has(slide)) {
-        slideStates.set(slide, {
-          prompt: '',
-          model: defaultModel,
-          messages: [],
-          boxes: [],
-          selectedBoxId: null,
-          selectedObjectXPath: '',
-        });
-      }
-      return slideStates.get(slide);
-    }
-
-    function getLatestRunForSlide(slide) {
-      const runs = Array.from(runsById.values())
-        .filter((run) => run.slide === slide)
-        .sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
-      return runs[0] || null;
-    }
-
-    // -------------------------------------------------------------------------
-    // Chat / Runs UI
-    // -------------------------------------------------------------------------
-    function addChatMessage(kind, text, slide = currentSlideFile()) {
-      if (!slide) return;
-
-      const state = getSlideState(slide);
-      state.messages.push({
-        id: randomId('msg'),
-        kind,
-        text,
-        at: new Date().toISOString(),
-      });
-
-      while (state.messages.length > 80) {
-        state.messages.shift();
-      }
-
-      if (slide === currentSlideFile()) {
-        renderChatMessages();
-      }
-    }
-
-    function renderChatMessages() {
-      if (!chatMessagesEl) return;
-      const slide = currentSlideFile();
-      if (!slide) {
-        chatMessagesEl.innerHTML = '';
-        return;
-      }
-
-      const state = getSlideState(slide);
-      const messages = Array.isArray(state.messages) ? state.messages : [];
-      if (messages.length === 0) {
-        chatMessagesEl.innerHTML = '';
-        return;
-      }
-
-      chatMessagesEl.innerHTML = messages
-        .map((msg) => {
-          const time = formatTime(msg.at);
-          return [
-            `<div class="message ${msg.kind}">`,
-            `${escapeHtml(msg.text)}`,
-            `<div class="run-meta" style="margin-top:6px;">${time}</div>`,
-            '</div>',
-          ].join('');
-        })
-        .join('');
-
-      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-    }
-
-    function renderRunsList() {}
-
-    // -------------------------------------------------------------------------
-    // Slide & bbox rendering
-    // -------------------------------------------------------------------------
-    function scaleSlide() {
-      const padX = 12;
-      const padY = 12;
-      const availW = slideStage.clientWidth - padX;
-      const availH = slideStage.clientHeight - padY;
-      if (availW <= 0 || availH <= 0) return;
-
-      const scale = Math.min(availW / SLIDE_W, availH / SLIDE_H, 1);
-      slideWrapper.style.transform = `scale(${scale})`;
-    }
-
-    function renderBboxes() {
-      const slide = currentSlideFile();
-      if (!slide) {
-        bboxLayer.innerHTML = '';
-        bboxCountEl.textContent = '0 pending · 0 review';
-        renderContextChips();
-        return;
-      }
-
-      const state = getSlideState(slide);
-      bboxLayer.innerHTML = state.boxes
-        .map((box, index) => {
-          const statusClass = normalizeBoxStatus(box.status);
-          const selectedClass = box.id === state.selectedBoxId ? 'selected' : '';
-          return [
-            `<div class="bbox-item ${statusClass} ${selectedClass}" data-box-id="${escapeHtml(box.id)}" style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">`,
-            `<div class="bbox-index">${index + 1}</div>`,
-            `<div class="bbox-actions">`,
-            `<button class="bbox-action-btn bbox-delete" data-box-delete="${escapeHtml(box.id)}" title="Delete bbox">×</button>`,
-            `<button class="bbox-action-btn bbox-check" data-box-check="${escapeHtml(box.id)}" title="Confirm bbox">Check</button>`,
-            `<button class="bbox-action-btn bbox-rerun" data-box-rerun="${escapeHtml(box.id)}" title="Mark bbox pending">Rerun</button>`,
-            `</div>`,
-            `</div>`,
-          ].join('');
-        })
-        .join('');
-      bboxLayer.classList.toggle('inert', toolMode !== TOOL_MODE_DRAW);
-
-      const pendingCount = state.boxes.filter((box) => normalizeBoxStatus(box.status) === 'pending').length;
-      const reviewCount = state.boxes.length - pendingCount;
-      bboxCountEl.textContent = `${pendingCount} pending · ${reviewCount} review`;
-      renderContextChips();
-      updateSendState();
-    }
-
-    function renderContextChips() {
-      if (!contextChipList) return;
-      const slide = currentSlideFile();
-      if (!slide) {
-        contextChipList.innerHTML = '';
-        if (sessionFileChip) sessionFileChip.textContent = '--';
-        return;
-      }
-
-      if (sessionFileChip) sessionFileChip.textContent = slide;
-
-      const state = getSlideState(slide);
-      if (!Array.isArray(state.boxes) || state.boxes.length === 0) {
-        contextChipList.innerHTML = '<span class="context-chip-empty">No bbox selected</span>';
-        return;
-      }
-
-      contextChipList.innerHTML = state.boxes
-        .map((box, index) => {
-          const statusClass = normalizeBoxStatus(box.status);
-          const selectedClass = box.id === state.selectedBoxId ? 'selected' : '';
-          return [
-            `<button class="context-chip ${statusClass} ${selectedClass}" data-chip-box-id="${escapeHtml(box.id)}" title="Focus bbox #${index + 1}">`,
-            `#${index + 1}`,
-            '</button>',
-          ].join('');
-        })
-        .join('');
-    }
-
-    function clientToSlidePoint(clientX, clientY) {
-      const rect = drawLayer.getBoundingClientRect();
-      const relX = clamp((clientX - rect.left) / rect.width, 0, 1);
-      const relY = clamp((clientY - rect.top) / rect.height, 0, 1);
-      return {
-        x: Math.round(relX * SLIDE_W),
-        y: Math.round(relY * SLIDE_H),
-      };
-    }
-
-    function startDrawing(event) {
-      if (toolMode !== TOOL_MODE_DRAW) return;
-      if (event.button !== 0) return;
-      event.preventDefault();
-
-      drawing = true;
-      drawStart = clientToSlidePoint(event.clientX, event.clientY);
-      drawBox.style.display = 'block';
-      drawBox.style.left = `${drawStart.x}px`;
-      drawBox.style.top = `${drawStart.y}px`;
-      drawBox.style.width = '1px';
-      drawBox.style.height = '1px';
-    }
-
-    function moveDrawing(event) {
-      if (toolMode !== TOOL_MODE_DRAW) return;
-      if (!drawing || !drawStart) return;
-      const current = clientToSlidePoint(event.clientX, event.clientY);
-
-      const x = Math.min(drawStart.x, current.x);
-      const y = Math.min(drawStart.y, current.y);
-      const width = Math.max(1, Math.abs(current.x - drawStart.x));
-      const height = Math.max(1, Math.abs(current.y - drawStart.y));
-
-      drawBox.style.left = `${x}px`;
-      drawBox.style.top = `${y}px`;
-      drawBox.style.width = `${width}px`;
-      drawBox.style.height = `${height}px`;
-    }
-
-    function endDrawing(event) {
-      if (toolMode !== TOOL_MODE_DRAW) return;
-      if (!drawing || !drawStart) return;
-
-      const slide = currentSlideFile();
-      if (!slide) return;
-
-      const current = clientToSlidePoint(event.clientX, event.clientY);
-
-      const x = Math.min(drawStart.x, current.x);
-      const y = Math.min(drawStart.y, current.y);
-      const width = Math.max(1, Math.abs(current.x - drawStart.x));
-      const height = Math.max(1, Math.abs(current.y - drawStart.y));
-
-      drawBox.style.display = 'none';
-      drawing = false;
-      drawStart = null;
-
-      if (width < 3 || height < 3) return;
-
-      const state = getSlideState(slide);
-      const newBox = {
-        id: randomId('bbox'),
-        x,
-        y,
-        width,
-        height,
-        status: 'pending',
-      };
-
-      state.boxes.push(newBox);
-      state.selectedBoxId = newBox.id;
-      renderBboxes();
-      setStatus(`Added bbox #${state.boxes.length} for ${slide}.`);
-    }
-
-    function clearBboxesForCurrentSlide() {
-      const slide = currentSlideFile();
-      if (!slide) return;
-
-      const state = getSlideState(slide);
-      state.boxes = [];
-      state.selectedBoxId = null;
-      renderBboxes();
-      setStatus('All bounding boxes cleared for current slide.');
-    }
-
-    bboxLayer.addEventListener('click', (event) => {
-      if (toolMode !== TOOL_MODE_DRAW) return;
-      const slide = currentSlideFile();
-      if (!slide) return;
-
-      const state = getSlideState(slide);
-      const checkButton = event.target.closest('[data-box-check]');
-      if (checkButton) {
-        const boxId = checkButton.getAttribute('data-box-check');
-        state.boxes = state.boxes.filter((box) => box.id !== boxId);
-        if (state.selectedBoxId === boxId) state.selectedBoxId = null;
-        renderBboxes();
-        setStatus('BBox confirmed and cleared.');
-        event.stopPropagation();
-        return;
-      }
-
-      const rerunButton = event.target.closest('[data-box-rerun]');
-      if (rerunButton) {
-        const boxId = rerunButton.getAttribute('data-box-rerun');
-        const box = state.boxes.find((item) => item.id === boxId);
-        if (box) box.status = 'pending';
-        state.selectedBoxId = boxId;
-        renderBboxes();
-        setStatus('BBox moved back to pending (red).');
-        event.stopPropagation();
-        return;
-      }
-
-      const deleteButton = event.target.closest('[data-box-delete]');
-      if (deleteButton) {
-        const boxId = deleteButton.getAttribute('data-box-delete');
-        state.boxes = state.boxes.filter((box) => box.id !== boxId);
-        if (state.selectedBoxId === boxId) state.selectedBoxId = null;
-        renderBboxes();
-        setStatus('Bounding box deleted.');
-        event.stopPropagation();
-        return;
-      }
-
-      const boxEl = event.target.closest('[data-box-id]');
-      if (boxEl) {
-        state.selectedBoxId = boxEl.getAttribute('data-box-id');
-        renderBboxes();
-        return;
-      }
-
-      state.selectedBoxId = null;
-      renderBboxes();
-    });
-
-    if (contextChipList) {
-      contextChipList.addEventListener('click', (event) => {
-        const chip = event.target.closest('[data-chip-box-id]');
-        if (!chip) return;
-
-        const slide = currentSlideFile();
-        if (!slide) return;
-
-        const boxId = chip.getAttribute('data-chip-box-id');
-        const state = getSlideState(slide);
-        const boxExists = state.boxes.some((box) => box.id === boxId);
-        if (!boxExists) return;
-
-        state.selectedBoxId = boxId;
-        renderBboxes();
-        setStatus(`Selected ${slide} region.`);
-      });
-    }
-
-    // -------------------------------------------------------------------------
-    // XPath extraction
-    // -------------------------------------------------------------------------
-    function getXPath(el) {
-      if (!el || el.nodeType !== Node.ELEMENT_NODE) return '';
-
-      const segments = [];
-      let node = el;
-      while (node && node.nodeType === Node.ELEMENT_NODE) {
-        const tag = node.tagName.toLowerCase();
-
-        let index = 1;
-        let sibling = node.previousElementSibling;
-        while (sibling) {
-          if (sibling.tagName === node.tagName) index += 1;
-          sibling = sibling.previousElementSibling;
-        }
-
-        segments.unshift(`${tag}[${index}]`);
-        node = node.parentElement;
-      }
-
-      return `/${segments.join('/')}`;
-    }
-
-    function intersectArea(a, b) {
-      const left = Math.max(a.x, b.x);
-      const top = Math.max(a.y, b.y);
-      const right = Math.min(a.x + a.width, b.x + b.width);
-      const bottom = Math.min(a.y + a.height, b.y + b.height);
-      if (right <= left || bottom <= top) return 0;
-      return (right - left) * (bottom - top);
-    }
-
-    function extractTargetsForBox(box) {
-      const doc = slideIframe.contentDocument;
-      if (!doc || !doc.body) return [];
-
-      const all = Array.from(doc.body.querySelectorAll('*'));
-      const candidates = [];
-
-      for (const el of all) {
-        const tag = el.tagName ? el.tagName.toLowerCase() : '';
-        if (!tag || ['script', 'style', 'link', 'meta', 'noscript'].includes(tag)) continue;
-
-        const rect = el.getBoundingClientRect();
-        if (!rect || rect.width <= 1 || rect.height <= 1) continue;
-
-        const targetBox = {
-          x: rect.left,
-          y: rect.top,
-          width: rect.width,
-          height: rect.height,
-        };
-
-        const area = intersectArea(box, targetBox);
-        if (area <= 0) continue;
-
-        const xpath = getXPath(el);
-        if (!xpath) continue;
-
-        candidates.push({
-          xpath,
-          tag,
-          text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 140),
-          area,
-        });
-      }
-
-      candidates.sort((a, b) => b.area - a.area);
-
-      const dedup = [];
-      const seen = new Set();
-      for (const item of candidates) {
-        if (seen.has(item.xpath)) continue;
-        seen.add(item.xpath);
-        dedup.push({ xpath: item.xpath, tag: item.tag, text: item.text });
-        if (dedup.length >= 12) break;
-      }
-
-      return dedup;
-    }
-
-    // -------------------------------------------------------------------------
-    // Direct object edit
-    // -------------------------------------------------------------------------
-    function resolveXPath(doc, xpath) {
-      if (!doc || typeof xpath !== 'string' || xpath.trim() === '') return null;
-      try {
-        return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      } catch {
-        return null;
-      }
-    }
-
-    function isElementNode(node) {
-      return Boolean(node) && node.nodeType === Node.ELEMENT_NODE;
-    }
-
-    function getSelectedObjectElement(slide = currentSlideFile()) {
-      if (!slide) return null;
-      const state = getSlideState(slide);
-      const xpath = state.selectedObjectXPath;
-      if (!xpath) return null;
-
-      const doc = slideIframe.contentDocument;
-      const el = resolveXPath(doc, xpath);
-      return isElementNode(el) ? el : null;
-    }
-
-    function isSelectableElement(el) {
-      if (!isElementNode(el)) return false;
-      const tag = el.tagName.toLowerCase();
-      if (NON_SELECTABLE_TAGS.has(tag)) return false;
-      const rect = el.getBoundingClientRect();
-      return rect.width > 1 && rect.height > 1;
-    }
-
-    function isTextEditableElement(el) {
-      if (!isElementNode(el)) return false;
-      const tag = el.tagName.toLowerCase();
-      if (!DIRECT_TEXT_TAGS.has(tag)) return false;
-      const INLINE_TAGS = new Set(['BR','B','STRONG','I','EM','U','S','SPAN','A','SMALL','SUB','SUP','MARK','CODE']);
-      return Array.from(el.children).every(c => INLINE_TAGS.has(c.tagName));
-    }
-
-    function getSelectableTargetAt(clientX, clientY) {
-      const doc = slideIframe.contentDocument;
-      if (!doc) return null;
-
-      const point = clientToSlidePoint(clientX, clientY);
-      let node = doc.elementFromPoint(point.x, point.y);
-      while (node && !isSelectableElement(node)) {
-        node = node.parentElement;
-      }
-      return isElementNode(node) ? node : null;
-    }
-
-    function elementToSlideRect(el) {
-      if (!isElementNode(el)) return null;
-      const rect = el.getBoundingClientRect();
-      if (!rect.width || !rect.height) return null;
-      return {
-        x: clamp(Math.round(rect.left), 0, SLIDE_W),
-        y: clamp(Math.round(rect.top), 0, SLIDE_H),
-        width: Math.max(1, Math.round(rect.width)),
-        height: Math.max(1, Math.round(rect.height)),
-      };
-    }
-
-    function applyOverlayRect(node, rect) {
-      if (!node || !rect) {
-        if (node) node.style.display = 'none';
-        return;
-      }
-
-      node.style.display = 'block';
-      node.style.left = `${rect.x}px`;
-      node.style.top = `${rect.y}px`;
-      node.style.width = `${rect.width}px`;
-      node.style.height = `${rect.height}px`;
-    }
-
-    function readSelectedObjectStyleState(el) {
-      const frameWindow = slideIframe.contentWindow;
-      const styles = frameWindow?.getComputedStyle ? frameWindow.getComputedStyle(el) : null;
-      const textDecorationLine = styles?.textDecorationLine || '';
-      return {
-        textEditable: isTextEditableElement(el),
-        textValue: (el.innerHTML || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').trim(),
-        textColor: normalizeHexColor(styles?.color, '#111111'),
-        backgroundColor: normalizeHexColor(styles?.backgroundColor, '#ffffff'),
-        fontSize: parsePixelValue(styles?.fontSize, 24),
-        bold: isBoldFontWeight(styles?.fontWeight),
-        italic: styles?.fontStyle === 'italic',
-        underline: /\bunderline\b/.test(textDecorationLine),
-        strike: /\bline-through\b/.test(textDecorationLine),
-        textAlign: styles?.textAlign || 'left',
-      };
-    }
-
-    function setToggleActive(button, active) {
-      if (!button) return;
-      button.classList.toggle('active', Boolean(active));
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    }
-
-    function setControlEnabled(button, enabled) {
-      if (!button) return;
-      button.disabled = !enabled;
-      button.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-    }
-
-    function getSelectedObjectCapabilities(el) {
-      const textEditable = isTextEditableElement(el);
-      return {
-        textEditable,
-        textColorEditable: textEditable,
-        backgroundEditable: isElementNode(el),
-        sizeEditable: textEditable,
-        emphasisEditable: textEditable,
-        alignEditable: textEditable,
-      };
-    }
-
-    function syncInlineInputs(snapshot) {
-      if (!document.activeElement || !document.activeElement.closest?.('#select-toolbar')) {
-        popoverTextInput.value = snapshot?.textValue || '';
-        popoverSizeInput.value = String(snapshot?.fontSize || 24);
-      }
-      popoverTextColorInput.value = snapshot?.textColor || '#111111';
-      popoverBgColorInput.value = snapshot?.backgroundColor || '#ffffff';
-    }
-
-    function updateObjectEditorControls() {
-      const selected = toolMode === TOOL_MODE_SELECT ? getSelectedObjectElement() : null;
-      const snapshot = selected ? readSelectedObjectStyleState(selected) : null;
-      const capabilities = getSelectedObjectCapabilities(selected);
-
-      if (bboxToolbar) {
-        bboxToolbar.hidden = toolMode !== TOOL_MODE_DRAW;
-      }
-      if (selectToolbar) {
-        selectToolbar.hidden = toolMode !== TOOL_MODE_SELECT;
-      }
-
-      if (selectedObjectMini && selectEmptyHint) {
-        if (selected) {
-          const tag = selected.tagName.toLowerCase();
-          const fullText = (selected.textContent || '').trim();
-          const preview = fullText.slice(0, 24);
-          miniTag.textContent = `<${tag}>`;
-          miniText.textContent = preview ? ` ${preview}${fullText.length > 24 ? '\u2026' : ''}` : '';
-          selectedObjectMini.style.display = '';
-          selectEmptyHint.style.display = 'none';
-        } else {
-          selectedObjectMini.style.display = 'none';
-          selectEmptyHint.style.display = toolMode === TOOL_MODE_SELECT ? '' : 'none';
-        }
-      }
-
-      popoverTextInput.disabled = !capabilities.textEditable;
-      popoverApplyText.disabled = !capabilities.textEditable;
-      popoverTextColorInput.disabled = !capabilities.textColorEditable;
-      popoverBgColorInput.disabled = !capabilities.backgroundEditable;
-      popoverSizeInput.disabled = !capabilities.sizeEditable;
-      popoverApplySize.disabled = !capabilities.sizeEditable;
-
-      setControlEnabled(toggleBold, capabilities.emphasisEditable);
-      setControlEnabled(toggleItalic, capabilities.emphasisEditable);
-      setControlEnabled(toggleUnderline, capabilities.emphasisEditable);
-      setControlEnabled(toggleStrike, capabilities.emphasisEditable);
-      setControlEnabled(alignLeft, capabilities.alignEditable);
-      setControlEnabled(alignCenter, capabilities.alignEditable);
-      setControlEnabled(alignRight, capabilities.alignEditable);
-
-      setToggleActive(toggleBold, capabilities.emphasisEditable && snapshot?.bold);
-      setToggleActive(toggleItalic, capabilities.emphasisEditable && snapshot?.italic);
-      setToggleActive(toggleUnderline, capabilities.emphasisEditable && snapshot?.underline);
-      setToggleActive(toggleStrike, capabilities.emphasisEditable && snapshot?.strike);
-      setToggleActive(alignLeft, capabilities.alignEditable && (snapshot?.textAlign === 'left' || snapshot?.textAlign === 'start'));
-      setToggleActive(alignCenter, capabilities.alignEditable && snapshot?.textAlign === 'center');
-      setToggleActive(alignRight, capabilities.alignEditable && (snapshot?.textAlign === 'right' || snapshot?.textAlign === 'end'));
-
-      syncInlineInputs(snapshot);
-    }
-
-    function renderObjectSelection() {
-      const selectedEl = toolMode === TOOL_MODE_SELECT ? getSelectedObjectElement() : null;
-      const hoveredEl = toolMode === TOOL_MODE_SELECT
-        ? resolveXPath(slideIframe.contentDocument, hoveredObjectXPath)
-        : null;
-
-      const selectedRect = selectedEl ? elementToSlideRect(selectedEl) : null;
-      const hoveredRect = hoveredEl && hoveredEl !== selectedEl ? elementToSlideRect(hoveredEl) : null;
-      applyOverlayRect(objectSelectedBox, selectedRect);
-      applyOverlayRect(objectHoverBox, hoveredRect);
-    }
-
-    function updateToolModeUI() {
-      const isDraw = toolMode === TOOL_MODE_DRAW;
-      slidePanel.classList.toggle('mode-draw', isDraw);
-      slidePanel.classList.toggle('mode-select', !isDraw);
-      toolModeDrawBtn.classList.toggle('active', isDraw);
-      toolModeSelectBtn.classList.toggle('active', !isDraw);
-      toolModeDrawBtn.setAttribute('aria-pressed', isDraw ? 'true' : 'false');
-      toolModeSelectBtn.setAttribute('aria-pressed', !isDraw ? 'true' : 'false');
-      editorHint.textContent = isDraw
-        ? 'Drag on the slide to add red bboxes. Cmd/Ctrl+Enter to run.'
-        : 'Click an object to edit. \u2318B bold \u00b7 \u2318I italic \u00b7 \u2318U underline';
-      renderBboxes();
-      renderObjectSelection();
-      updateObjectEditorControls();
-      scaleSlide();
-    }
-
-    function setToolMode(mode) {
-      toolMode = mode === TOOL_MODE_SELECT ? TOOL_MODE_SELECT : TOOL_MODE_DRAW;
-      drawing = false;
-      drawStart = null;
-      drawBox.style.display = 'none';
-      if (toolMode !== TOOL_MODE_SELECT) {
-        hoveredObjectXPath = '';
-      }
-      updateToolModeUI();
-      setStatus(toolMode === TOOL_MODE_SELECT ? 'Select mode enabled.' : 'BBox draw mode enabled.');
-    }
-
-    function setSelectedObjectXPath(xpath, statusMessage = 'Object selected.') {
-      const slide = currentSlideFile();
-      if (!slide) return;
-      const state = getSlideState(slide);
-      state.selectedObjectXPath = xpath || '';
-      hoveredObjectXPath = xpath || '';
-      renderObjectSelection();
-      updateObjectEditorControls();
-      if (statusMessage) {
-        setStatus(statusMessage);
-      }
-    }
-
-    function updateHoveredObjectFromPointer(clientX, clientY) {
-      if (toolMode !== TOOL_MODE_SELECT) return;
-      const target = getSelectableTargetAt(clientX, clientY);
-      hoveredObjectXPath = target ? getXPath(target) : '';
-      renderObjectSelection();
-    }
-
-    function clearHoveredObject() {
-      hoveredObjectXPath = '';
-      renderObjectSelection();
-    }
-
-    function serializeSlideDocument(doc) {
-      if (!doc?.documentElement) return '';
-      const doctype = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>` : '<!DOCTYPE html>';
-      return `${doctype}\n${doc.documentElement.outerHTML}`;
-    }
-
-    async function persistDirectSlideHtml(slide, html, message) {
-      if (!slide || !html) return;
-
-      try {
-        const res = await fetch(`/api/slides/${encodeURIComponent(slide)}/save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slide, html }),
-        });
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          throw new Error(data.error || `Save failed with HTTP ${res.status}`);
-        }
-
-        localFileUpdateBySlide.set(slide, Date.now());
-        if (slide === currentSlideFile()) {
-          setStatus(message || `${slide} saved.`);
-        }
-      } catch (error) {
-        addChatMessage('error', `[${slide}] Direct edit save failed: ${error.message}`, slide);
-        setStatus(`Error: ${error.message}`);
-      }
-    }
-
-    function queueDirectSave(slide, html, message) {
-      const saveState = getDirectSaveState(slide);
-      if (!html) return saveState.chain;
-      saveState.chain = saveState.chain
-        .catch(() => {})
-        .then(() => persistDirectSlideHtml(slide, html, message));
-      return saveState.chain;
-    }
-
-    function scheduleDirectSave(delay = 0, message = 'Object updated and saved.') {
-      const slide = currentSlideFile();
-      const html = serializeSlideDocument(slideIframe.contentDocument);
-      if (!slide || !html) return;
-
-      const saveState = getDirectSaveState(slide);
-      saveState.pendingHtml = html;
-      saveState.pendingMessage = message;
-      if (saveState.timer) {
-        window.clearTimeout(saveState.timer);
-      }
-      saveState.timer = window.setTimeout(() => {
-        saveState.timer = null;
-        const nextHtml = saveState.pendingHtml;
-        const nextMessage = saveState.pendingMessage;
-        saveState.pendingHtml = '';
-        queueDirectSave(slide, nextHtml, nextMessage);
-      }, Math.max(0, delay));
-    }
-
-    async function flushDirectSaveForSlide(slide) {
-      if (!slide) return;
-
-      const saveState = getDirectSaveState(slide);
-      if (saveState.timer) {
-        window.clearTimeout(saveState.timer);
-        saveState.timer = null;
-        const html = saveState.pendingHtml;
-        const message = saveState.pendingMessage;
-        saveState.pendingHtml = '';
-        await queueDirectSave(slide, html, message);
-        return;
-      }
-
-      await saveState.chain.catch(() => {});
-    }
-
-    function applyTextDecorationToken(el, token, shouldEnable) {
-      const frameWindow = slideIframe.contentWindow;
-      const styles = frameWindow?.getComputedStyle ? frameWindow.getComputedStyle(el) : null;
-      const parts = new Set(
-        String(styles?.textDecorationLine || '')
-          .split(/\s+/)
-          .filter((part) => part === 'underline' || part === 'line-through'),
-      );
-      if (shouldEnable) {
-        parts.add(token);
-      } else {
-        parts.delete(token);
-      }
-      el.style.textDecorationLine = parts.size > 0 ? Array.from(parts).join(' ') : 'none';
-    }
-
-    function mutateSelectedObject(mutator, message, { delay = 0, preserveTextInput = false } = {}) {
-      const selected = getSelectedObjectElement();
-      if (!selected) return;
-      mutator(selected);
-      renderObjectSelection();
-      updateObjectEditorControls({ preserveTextInput });
-      scheduleDirectSave(delay, message);
-      setStatus('Saving direct edit...');
-    }
-
-    // -------------------------------------------------------------------------
-    // Send
-    // -------------------------------------------------------------------------
-    function updateSlideStatusChip() {
-      const slide = currentSlideFile();
-      if (!slide) {
-        slideStatusChip.textContent = 'idle';
-        slideStatusChip.className = 'slide-status-chip idle';
-        return;
-      }
-
-      let status = 'idle';
-      if (pendingRequestBySlide.has(slide)) {
-        status = 'running';
-      } else if (activeRunBySlide.has(slide)) {
-        status = 'running';
-      } else {
-        const latest = getLatestRunForSlide(slide);
-        if (latest?.status === 'success') status = 'success';
-        if (latest?.status === 'failed') status = 'failed';
-      }
-
-      slideStatusChip.textContent = status;
-      slideStatusChip.className = `slide-status-chip ${status}`;
-    }
-
-    function updateSendState() {
-      const slide = currentSlideFile();
-      if (!slide) {
-        btnSend.disabled = true;
-        btnClearBboxes.disabled = true;
-        return;
-      }
-
-      const state = getSlideState(slide);
-      const prompt = (promptInput.value || '').trim();
-      const pendingCount = state.boxes.filter((box) => normalizeBoxStatus(box.status) === 'pending').length;
-      const blocked = pendingRequestBySlide.has(slide) || activeRunBySlide.has(slide);
-      const model = normalizeModelName(state.model);
-
-      btnSend.disabled = !prompt || pendingCount === 0 || blocked || !model;
-      btnClearBboxes.disabled = state.boxes.length === 0 || blocked;
-      updateSlideStatusChip();
-    }
-
-    async function applyChanges() {
-      const slide = currentSlideFile();
-      if (!slide) return;
-
-      await flushDirectSaveForSlide(slide);
-
-      const state = getSlideState(slide);
-      const prompt = (promptInput.value || '').trim();
-      const pendingBoxes = state.boxes.filter((box) => normalizeBoxStatus(box.status) === 'pending');
-      const model = normalizeModelName(state.model) || selectedModel || defaultModel;
-
-      if (!prompt) return;
-      if (pendingBoxes.length === 0) {
-        setStatus('No pending (red) bbox to run. Draw a new box or click Rerun on a green box.');
-        return;
-      }
-
-      const submittedBoxIds = pendingBoxes.map((box) => box.id);
-      const submittedSet = new Set(submittedBoxIds);
-
-      const selections = pendingBoxes.map((box) => ({
-        x: box.x,
-        y: box.y,
-        width: box.width,
-        height: box.height,
-        targets: extractTargetsForBox(box),
-      }));
-
-      addChatMessage('user', `[${slide}] [${model}] ${prompt}`, slide);
-
-      pendingRequestBySlide.add(slide);
-      state.prompt = '';
-      promptInput.value = '';
-      updateSendState();
-      setStatus(`Submitting ${slide} to Codex...`);
-
-      try {
-        const res = await fetch('/api/apply', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            slide,
-            prompt,
-            model,
-            selections,
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          const message = data.error || `Server error ${res.status}`;
-          addChatMessage('error', `[${slide}] ${message}`, slide);
-          setStatus(`Error: ${message}`);
-          return;
-        }
-
-        if (data.runId) {
-          const existing = runsById.get(data.runId) || {};
-          runsById.set(data.runId, {
-            ...existing,
-            runId: data.runId,
-            slide,
-            status: data.success ? 'success' : 'failed',
-            code: data.code,
-            message: data.message,
-            model: data.model || model,
-            startedAt: existing.startedAt || new Date().toISOString(),
-            finishedAt: new Date().toISOString(),
-            logPreview: existing.logPreview || '',
-          });
-          renderRunsList();
-        }
-
-        addChatMessage(
-          data.success ? 'system' : 'error',
-          `[${slide}] ${data.message || (data.success ? 'Completed' : 'Failed')}`,
-          slide,
-        );
-
-        if (data.success) {
-          let marked = 0;
-          for (const box of state.boxes) {
-            if (submittedSet.has(box.id) && normalizeBoxStatus(box.status) === 'pending') {
-              box.status = 'review';
-              marked += 1;
-            }
-          }
-          renderBboxes();
-          setStatus(
-            marked > 0
-              ? `${data.message || 'Codex run completed.'} Review ${marked} green bbox${marked === 1 ? '' : 'es'}: Check to accept or Rerun.`
-              : (data.message || 'Codex run completed.'),
-          );
-        } else {
-          setStatus(data.message || 'Codex run failed.');
-        }
-      } catch (error) {
-        addChatMessage('error', `[${slide}] ${error.message}`, slide);
-        setStatus(`Error: ${error.message}`);
-      } finally {
-        pendingRequestBySlide.delete(slide);
-        updateSendState();
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // Navigation
-    // -------------------------------------------------------------------------
-    function persistCurrentSlideDraft() {
-      const slide = currentSlideFile();
-      if (!slide) return;
-      const state = getSlideState(slide);
-      state.prompt = promptInput.value;
-      state.model = normalizeModelName(modelSelect.value) || state.model || defaultModel;
-    }
-
-    async function goToSlide(index) {
-      if (index < 0 || index >= slides.length) return;
-
-      const previousSlide = currentSlideFile();
-      persistCurrentSlideDraft();
-      if (previousSlide) {
-        await flushDirectSaveForSlide(previousSlide);
-      }
-
-      currentIndex = index;
-      const slide = currentSlideFile();
-      slideIframe.src = `/slides/${slide}`;
-      if (sessionFileChip) sessionFileChip.textContent = slide;
-      slideCounter.textContent = `${currentIndex + 1} / ${slides.length}`;
-      btnPrev.disabled = currentIndex === 0;
-      btnNext.disabled = currentIndex === slides.length - 1;
-
-      const state = getSlideState(slide);
-      if (!availableModels.includes(normalizeModelName(state.model))) {
-        state.model = defaultModel;
-      }
-      selectedModel = state.model;
-      modelSelect.value = selectedModel;
-      promptInput.value = state.prompt || '';
-      hoveredObjectXPath = '';
-      renderChatMessages();
-      renderBboxes();
-      renderObjectSelection();
-      updateObjectEditorControls();
-      updateSendState();
-      setStatus(`Loaded ${slide}`);
-    }
-
-    // -------------------------------------------------------------------------
-    // SSE
-    // -------------------------------------------------------------------------
-    function upsertRun(run) {
-      if (!run?.runId) return;
-      const existing = runsById.get(run.runId) || {};
-      runsById.set(run.runId, {
-        ...existing,
-        ...run,
-      });
-    }
-
-    function connectSSE() {
-      const evtSource = new EventSource('/api/events');
-
-      evtSource.onopen = () => {
-        statusDot.classList.add('connected');
-        statusDot.classList.remove('disconnected');
-        statusConn.textContent = 'Connected';
-      };
-
-      evtSource.addEventListener('runsSnapshot', (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-
-          runsById.clear();
-          for (const run of payload.runs || []) {
-            upsertRun(run);
-          }
-
-          activeRunBySlide.clear();
-          for (const active of payload.activeRuns || []) {
-            if (active.slide && active.runId) {
-              activeRunBySlide.set(active.slide, active.runId);
-            }
-          }
-
-          renderRunsList();
-          updateSendState();
-        } catch (error) {
-          console.error('runsSnapshot parse error:', error);
-        }
-      });
-
-      evtSource.addEventListener('applyStarted', (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          activeRunBySlide.set(payload.slide, payload.runId);
-
-          upsertRun({
-            runId: payload.runId,
-            slide: payload.slide,
-            model: payload.model || '',
-            status: 'running',
-            message: `${payload.model ? `${payload.model} | ` : ''}Running (${payload.selectionsCount || 0} bbox)`,
-            startedAt: new Date().toISOString(),
-            logPreview: '',
-          });
-
-          addChatMessage('system', `[${payload.slide}] run started (${payload.runId})`, payload.slide);
-          renderRunsList();
-          updateSendState();
-        } catch (error) {
-          console.error('applyStarted parse error:', error);
-        }
-      });
-
-      evtSource.addEventListener('applyLog', (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          if (!payload.runId) return;
-          const run = runsById.get(payload.runId);
-          if (run) {
-            run.logPreview = (String(run.logPreview || '') + String(payload.chunk || '')).slice(-2000);
-            runsById.set(payload.runId, run);
-          }
-        } catch (error) {
-          console.error('applyLog parse error:', error);
-        }
-      });
-
-      evtSource.addEventListener('applyFinished', (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          activeRunBySlide.delete(payload.slide);
-
-          upsertRun({
-            runId: payload.runId,
-            slide: payload.slide,
-            model: payload.model || '',
-            status: payload.success ? 'success' : 'failed',
-            code: payload.code,
-            message: payload.message,
-            finishedAt: new Date().toISOString(),
-          });
-
-          addChatMessage(
-            payload.success ? 'system' : 'error',
-            `[${payload.slide}] ${payload.message || (payload.success ? 'completed' : 'failed')}`,
-            payload.slide,
-          );
-
-          renderRunsList();
-          updateSendState();
-          setStatus(payload.message || 'Run finished.');
-        } catch (error) {
-          console.error('applyFinished parse error:', error);
-        }
-      });
-
-      evtSource.addEventListener('fileChanged', (event) => {
-        try {
-          const { file } = JSON.parse(event.data);
-          if (file === currentSlideFile()) {
-            const updatedAt = localFileUpdateBySlide.get(file);
-            if (updatedAt && Date.now() - updatedAt < 2000) {
-              localFileUpdateBySlide.delete(file);
-              return;
-            }
-            slideIframe.src = slideIframe.src;
-          }
-        } catch (error) {
-          console.error('fileChanged parse error:', error);
-        }
-      });
-
-      evtSource.onerror = () => {
-        statusDot.classList.remove('connected');
-        statusDot.classList.add('disconnected');
-        statusConn.textContent = 'Disconnected';
-      };
-    }
-
-    async function loadRunsInitial() {
-      try {
-        const res = await fetch('/api/runs');
-        if (!res.ok) return;
-        const payload = await res.json();
-
-        runsById.clear();
-        for (const run of payload.runs || []) {
-          upsertRun(run);
-        }
-
-        activeRunBySlide.clear();
-        for (const active of payload.activeRuns || []) {
-          if (active.slide && active.runId) {
-            activeRunBySlide.set(active.slide, active.runId);
-          }
-        }
-
-        renderRunsList();
-        updateSendState();
-      } catch {
-        // ignore
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // Event wiring
-    // -------------------------------------------------------------------------
-    btnPrev.addEventListener('click', () => { void goToSlide(currentIndex - 1); });
-    btnNext.addEventListener('click', () => { void goToSlide(currentIndex + 1); });
-
-    toolModeDrawBtn.addEventListener('click', () => setToolMode(TOOL_MODE_DRAW));
-    toolModeSelectBtn.addEventListener('click', () => setToolMode(TOOL_MODE_SELECT));
-
-    btnClearBboxes.addEventListener('click', clearBboxesForCurrentSlide);
-
-    drawLayer.addEventListener('mousedown', startDrawing);
-    drawLayer.addEventListener('mousemove', (event) => {
-      if (toolMode !== TOOL_MODE_SELECT) return;
-      updateHoveredObjectFromPointer(event.clientX, event.clientY);
-    });
-    drawLayer.addEventListener('mouseleave', clearHoveredObject);
-    drawLayer.addEventListener('click', (event) => {
-      if (toolMode !== TOOL_MODE_SELECT) return;
-      const target = getSelectableTargetAt(event.clientX, event.clientY);
-      if (!target) {
-        setSelectedObjectXPath('', 'No selectable object at this point.');
-        return;
-      }
-
-      const xpath = getXPath(target);
-      setSelectedObjectXPath(xpath, `Object selected on ${currentSlideFile()}.`);
-    });
-    window.addEventListener('mousemove', moveDrawing);
-    window.addEventListener('mouseup', endDrawing);
-
-    btnSend.addEventListener('click', applyChanges);
-
-    modelSelect.addEventListener('change', () => {
-      const nextModel = normalizeModelName(modelSelect.value);
-      if (!availableModels.includes(nextModel)) {
-        modelSelect.value = selectedModel;
-        return;
-      }
-
-      const slide = currentSlideFile();
-      if (slide) {
-        const state = getSlideState(slide);
-        state.model = nextModel;
-      }
-      selectedModel = nextModel;
-      defaultModel = nextModel;
-      saveSelectedModel(selectedModel);
-      updateSendState();
-      setStatus(`Model selected: ${selectedModel}`);
-    });
-
-    promptInput.addEventListener('input', () => {
-      const slide = currentSlideFile();
-      if (slide) {
-        const state = getSlideState(slide);
-        state.prompt = promptInput.value;
-      }
-      updateSendState();
-    });
-
-    popoverApplyText.addEventListener('click', () => {
-      if (popoverApplyText.disabled) return;
-      mutateSelectedObject((el) => {
-        const escaped = popoverTextInput.value
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        el.innerHTML = escaped.replace(/\n/g, '<br>');
-      }, 'Object text updated and saved.', { delay: 120 });
-    });
-
-    popoverApplySize.addEventListener('click', () => {
-      if (popoverApplySize.disabled) return;
-      const size = clamp(Number.parseInt(popoverSizeInput.value || '24', 10) || 24, 8, 180);
-      mutateSelectedObject((el) => {
-        el.style.fontSize = `${size}px`;
-      }, 'Object font size updated and saved.');
-    });
-
-    popoverTextInput.addEventListener('keydown', (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        popoverApplyText.click();
-      }
-    });
-
-    popoverSizeInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        popoverApplySize.click();
-      }
-    });
-
-    popoverTextColorInput.addEventListener('input', () => {
-      if (popoverTextColorInput.disabled) return;
-      mutateSelectedObject((el) => {
-        el.style.color = popoverTextColorInput.value;
-      }, 'Text color updated.', { delay: 300 });
-    });
-
-    popoverBgColorInput.addEventListener('input', () => {
-      if (popoverBgColorInput.disabled) return;
-      mutateSelectedObject((el) => {
-        el.style.backgroundColor = popoverBgColorInput.value;
-      }, 'Background color updated.', { delay: 300 });
-    });
-
-    toggleBold.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        const nextBold = !readSelectedObjectStyleState(el).bold;
-        el.style.fontWeight = nextBold ? '700' : '400';
-      }, 'Object font weight updated and saved.');
-    });
-
-    toggleItalic.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        const nextItalic = !readSelectedObjectStyleState(el).italic;
-        el.style.fontStyle = nextItalic ? 'italic' : 'normal';
-      }, 'Object font style updated and saved.');
-    });
-
-    toggleUnderline.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        const nextUnderline = !readSelectedObjectStyleState(el).underline;
-        applyTextDecorationToken(el, 'underline', nextUnderline);
-      }, 'Object underline updated and saved.');
-    });
-
-    toggleStrike.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        const nextStrike = !readSelectedObjectStyleState(el).strike;
-        applyTextDecorationToken(el, 'line-through', nextStrike);
-      }, 'Object strikethrough updated and saved.');
-    });
-
-    alignLeft.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        el.style.textAlign = 'left';
-      }, 'Object alignment updated and saved.');
-    });
-
-    alignCenter.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        el.style.textAlign = 'center';
-      }, 'Object alignment updated and saved.');
-    });
-
-    alignRight.addEventListener('click', () => {
-      mutateSelectedObject((el) => {
-        el.style.textAlign = 'right';
-      }, 'Object alignment updated and saved.');
-    });
-
-    document.addEventListener('keydown', (event) => {
-      const inPromptField = document.activeElement === promptInput;
-
-      if (toolMode === TOOL_MODE_SELECT && (event.ctrlKey || event.metaKey) && !inPromptField) {
-        const key = event.key.toLowerCase();
-        if (key === 'b') { event.preventDefault(); if (!toggleBold.disabled) toggleBold.click(); return; }
-        if (key === 'i') { event.preventDefault(); if (!toggleItalic.disabled) toggleItalic.click(); return; }
-        if (key === 'u') { event.preventDefault(); if (!toggleUnderline.disabled) toggleUnderline.click(); return; }
-      }
-
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        applyChanges();
-        return;
-      }
-
-      if (event.key === 'Escape') {
-        if (document.activeElement) document.activeElement.blur();
-        return;
-      }
-
-      if (inPromptField) return;
-
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        void goToSlide(currentIndex - 1);
-      } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        void goToSlide(currentIndex + 1);
-      }
-    });
-
-    window.addEventListener('resize', scaleSlide);
-    slideIframe.addEventListener('load', () => {
-      const slide = currentSlideFile();
-      if (slide) {
-        const state = getSlideState(slide);
-        if (state.selectedObjectXPath && !getSelectedObjectElement(slide)) {
-          state.selectedObjectXPath = '';
-        }
-      }
-      hoveredObjectXPath = '';
-      renderBboxes();
-      renderObjectSelection();
-      updateObjectEditorControls();
-      updateSendState();
-    });
-
-    // No popover dismiss needed — controls are inline in sidebar
-
-    // -------------------------------------------------------------------------
-    // Init
-    // -------------------------------------------------------------------------
-    async function init() {
-      setStatus('Loading slide list...');
-
-      try {
-        const res = await fetch('/api/slides');
-        if (!res.ok) {
-          throw new Error(`Failed to fetch slide list: ${res.status}`);
-        }
-
-        slides = await res.json();
-
-        if (slides.length === 0) {
-          setStatus('No slides found.');
-          slideCounter.textContent = '0 / 0';
-          return;
-        }
-
-        await loadModelOptions();
-        updateToolModeUI();
-        await goToSlide(0);
-        scaleSlide();
-        await loadRunsInitial();
-        connectSSE();
-
-        setStatus(`Ready. Model: ${selectedModel}. Draw red pending bboxes, run Codex, then review green bboxes.`);
-      } catch (error) {
-        setStatus(`Error loading slides: ${error.message}`);
-        console.error('Init error:', error);
-      }
-    }
-
-    init();
-  </script>
+  <script type="module" src="/js/editor-init.js"></script>
 </body>
 </html>
