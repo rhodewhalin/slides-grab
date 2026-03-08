@@ -274,11 +274,12 @@ function spawnClaudeEdit({ prompt, imagePath, model, cwd, onLog }) {
   const env = { ...process.env };
   delete env.CLAUDECODE;
 
-  console.log(`[claude] bin=${claudeBin} args=${JSON.stringify(args.slice(0, 6))}... (prompt truncated)`);
-
   return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(claudeBin, args, { cwd, stdio: 'pipe', env });
-    console.log(`[claude] spawned pid=${child.pid}`);
+    const child = spawn(claudeBin, args, {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env,
+    });
 
     let stdout = '';
     let stderr = '';
@@ -652,8 +653,6 @@ async function startServer(opts) {
 
       const usesClaude = isClaudeModel(selectedModel);
       const spawnEdit = usesClaude ? spawnClaudeEdit : spawnCodexEdit;
-      console.log(`[apply] engine=${usesClaude ? 'claude' : 'codex'} model=${selectedModel}`);
-      console.log(`[apply] prompt length=${codexPrompt.length}, image=${annotatedPath}`);
       const result = await spawnEdit({
         prompt: codexPrompt,
         imagePath: annotatedPath,
