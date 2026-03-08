@@ -2,30 +2,11 @@
 
 This guide is for running `slides-grab` with Claude-based workflow files under `.claude/skills/`.
 
-## 1) Install Dependencies
-
-Clone:
+## 1) Clone and Install
 
 ```bash
 git clone https://github.com/vkehfdl1/slides-grab.git && cd slides-grab
-```
-
-Install (macOS):
-
-```bash
-brew update && brew install node git && npm ci && npx playwright install chromium
-```
-
-Install (Ubuntu):
-
-```bash
-sudo apt-get update && sudo apt-get install -y curl git && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs && npm ci && npx playwright install chromium
-```
-
-Install (Windows PowerShell):
-
-```powershell
-winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements; winget install -e --id Git.Git --accept-package-agreements --accept-source-agreements; npm ci; npx playwright install chromium
+npm ci && npx playwright install chromium
 ```
 
 Verify:
@@ -47,6 +28,8 @@ Core references:
 - `.claude/skills/plan-skill/SKILL.md`
 - `.claude/skills/design-skill/SKILL.md`
 - `.claude/skills/pptx-skill/SKILL.md`
+
+Or use the integrated skill: `.claude/skills/presentation-skill/SKILL.md`
 
 ## 3) Run Commands During Workflow
 

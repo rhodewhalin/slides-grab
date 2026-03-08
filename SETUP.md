@@ -8,24 +8,30 @@ Copy-paste installation guide for `slides-grab`.
 git clone https://github.com/vkehfdl1/slides-grab.git && cd slides-grab
 ```
 
-## 2) One-Liner Install by OS
+## 2) Install Dependencies
+
+```bash
+npm ci && npx playwright install chromium
+```
+
+### Platform-specific: install Node.js first if needed
 
 macOS (Homebrew):
 
 ```bash
-brew update && brew install node git && npm ci && npx playwright install chromium
+brew update && brew install node git
 ```
 
 Ubuntu (apt):
 
 ```bash
-sudo apt-get update && sudo apt-get install -y curl git && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs && npm ci && npx playwright install chromium
+sudo apt-get update && sudo apt-get install -y curl git && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs
 ```
 
 Windows (winget, PowerShell):
 
 ```powershell
-winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements; winget install -e --id Git.Git --accept-package-agreements --accept-source-agreements; npm ci; npx playwright install chromium
+winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements; winget install -e --id Git.Git --accept-package-agreements --accept-source-agreements
 ```
 
 ## 3) Verify CLI
@@ -33,3 +39,13 @@ winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-so
 ```bash
 npm exec -- slides-grab --help
 ```
+
+## 4) For Codex Users
+
+Install Codex skills after cloning:
+
+```bash
+npm exec -- slides-grab install-codex-skills --force
+```
+
+Then restart Codex.

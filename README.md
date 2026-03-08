@@ -20,11 +20,11 @@ Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/prompts/se
 Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/prompts/setup-codex.md and follow every step.
 ```
 
-Or install manually:
+Or clone manually:
 
 ```bash
-npm install slides-grab && npx playwright install chromium
-npx slides-grab --help
+git clone https://github.com/vkehfdl1/slides-grab.git && cd slides-grab
+npm ci && npx playwright install chromium
 ```
 
 > Requires **Node.js >= 18**.
@@ -67,6 +67,14 @@ slides-grab convert    --slides-dir decks/my-deck --output decks/my-deck.pptx
 - [Codex setup](docs/prompts/setup-codex.md)
 - [Claude detailed guide](docs/installation/claude.md)
 - [Codex detailed guide](docs/installation/codex.md)
+
+## npm Package
+
+Also available as an npm package for standalone CLI usage:
+
+```bash
+npm install slides-grab
+```
 
 ## Project Structure
 

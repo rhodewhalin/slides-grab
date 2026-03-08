@@ -2,16 +2,17 @@
 
 Follow every step below. Run each command and verify before moving on.
 
-## 1. Install the package
+## 1. Clone and install
 
 ```bash
-npm install slides-grab && npx playwright install chromium
+git clone https://github.com/vkehfdl1/slides-grab.git && cd slides-grab
+npm ci && npx playwright install chromium
 ```
 
 ## 2. Install Codex skills
 
 ```bash
-npx slides-grab install-codex-skills --force
+npm exec -- slides-grab install-codex-skills --force
 ```
 
 Then restart Codex so the skills are loaded.
@@ -19,7 +20,7 @@ Then restart Codex so the skills are loaded.
 ## 3. Verify
 
 ```bash
-npx slides-grab --help
+npm exec -- slides-grab --help
 ```
 
 You should see the CLI help output with commands: edit, build-viewer, validate, convert, pdf, etc.
