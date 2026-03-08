@@ -8,8 +8,12 @@ Simple things like text, size, or bold can still be edited manually, just like i
 </p>
 
 <p align="center">
-The whole slides are HTML, the langauge (which is not) that outperformed by AI agents.<br>
+The whole slides are HTML & CSS, the programming langauge (which is not) that outperformed by AI agents.<br>
 So the slides are beautiful, easily editable by AI agents, and can be converted to pdf and pptx.
+</p>
+
+<p align="center">
+The editor is pure javascript file. You can easily add up new features like adding new coding agents, changing designs, etc.
 </p>
 
 ---
