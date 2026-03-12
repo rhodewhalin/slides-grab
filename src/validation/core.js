@@ -5,7 +5,6 @@ import { chromium } from 'playwright';
 import {
   buildImageContractReport,
   classifyImageSource,
-  extractCssUrls,
   resolveSlideSourcePath,
 } from '../image-contract.js';
 
@@ -259,8 +258,22 @@ export async function inspectSlide(page, fileName, slidesDir) {
       const critical = [];
       const warning = [];
       const seenOverlaps = new Set();
+      const cssUrlRe = /url\(\s*(['"]?)(.*?)\1\s*\)/gi;
 
       const round = (value) => Number(value.toFixed(2));
+      const extractUrls = (value) => {
+        const input = typeof value === 'string' ? value : '';
+        const matches = [];
+        let match;
+        cssUrlRe.lastIndex = 0;
+        while ((match = cssUrlRe.exec(input)) !== null) {
+          const candidate = (match[2] || '').trim();
+          if (candidate) {
+            matches.push(candidate);
+          }
+        }
+        return matches;
+      };
 
       const normalizeRect = (rect) => {
         const left = rect.left ?? rect.x ?? 0;
@@ -326,6 +339,61 @@ export async function inspectSlide(page, fileName, slidesDir) {
 
         const rect = element.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
+      };
+
+      const collectDeclaredBackgroundValues = (element) => {
+        const values = [];
+        const pushValue = (value) => {
+          if (
+            typeof value !== 'string'
+            || value === ''
+            || value === 'none'
+            || !value.includes('url(')
+            || values.includes(value)
+          ) {
+            return;
+          }
+          values.push(value);
+        };
+
+        pushValue(element.style?.getPropertyValue('background-image'));
+        pushValue(element.style?.getPropertyValue('background'));
+
+        const visitRules = (rules) => {
+          for (const rule of Array.from(rules || [])) {
+            if (rule.type === CSSRule.STYLE_RULE) {
+              let matches = false;
+              try {
+                matches = element.matches(rule.selectorText);
+              } catch {
+                matches = false;
+              }
+
+              if (!matches) continue;
+              pushValue(rule.style?.getPropertyValue('background-image'));
+              pushValue(rule.style?.getPropertyValue('background'));
+              continue;
+            }
+
+            if ('cssRules' in rule) {
+              try {
+                visitRules(rule.cssRules);
+              } catch {
+                // Ignore cross-origin and invalid stylesheet access.
+              }
+            }
+          }
+        };
+
+        for (const sheet of Array.from(document.styleSheets)) {
+          try {
+            visitRules(sheet.cssRules);
+          } catch {
+            // Ignore cross-origin stylesheets.
+          }
+        }
+
+        return values;
       };
 
       const bodyRect = document.body.getBoundingClientRect();
@@ -424,23 +492,33 @@ export async function inspectSlide(page, fileName, slidesDir) {
         }
       }
 
+      const images = Array.from(document.querySelectorAll('img')).map((element) => ({
+        element: elementPath(element),
+        src: (element.getAttribute('src') || '').trim(),
+        alt: (element.getAttribute('alt') || '').trim(),
+      }));
+
+      const backgrounds = [document.body, ...Array.from(document.body.querySelectorAll('*'))]
+        .map((element) => {
+          const computedBackgroundImage = window.getComputedStyle(element).backgroundImage;
+          const declaredBackgroundValues = collectDeclaredBackgroundValues(element);
+          const declaredBackgroundImage = declaredBackgroundValues.find((value) => extractUrls(value).length > 0) || '';
+          const declaredUrls = declaredBackgroundValues.flatMap(extractUrls);
+          const urls = declaredUrls.length > 0 ? declaredUrls : extractUrls(computedBackgroundImage);
+
+          return {
+            element: element === document.body ? 'body' : elementPath(element),
+            backgroundImage: declaredBackgroundImage || computedBackgroundImage,
+            urls,
+          };
+        })
+        .filter((entry) => entry.urls.length > 0);
+
       return {
         critical,
         warning,
-        images: Array.from(document.querySelectorAll('img')).map((element) => ({
-          element: elementPath(element),
-          src: (element.getAttribute('src') || '').trim(),
-          alt: (element.getAttribute('alt') || '').trim(),
-        })),
-        backgrounds: [document.body, ...Array.from(document.body.querySelectorAll('*'))]
-          .map((element) => {
-            const backgroundImage = window.getComputedStyle(element).backgroundImage;
-            return {
-              element: element === document.body ? 'body' : elementPath(element),
-              backgroundImage,
-            };
-          })
-          .filter((entry) => entry.backgroundImage && entry.backgroundImage !== 'none' && entry.backgroundImage.includes('url(')),
+        images,
+        backgrounds,
       };
     },
     {
@@ -452,10 +530,7 @@ export async function inspectSlide(page, fileName, slidesDir) {
 
   const imageContractIssues = await inspectImageContract(slidesDir, fileName, {
     images: inspection.images,
-    backgrounds: inspection.backgrounds.map((background) => ({
-      ...background,
-      urls: extractCssUrls(background.backgroundImage),
-    })),
+    backgrounds: inspection.backgrounds,
   });
 
   inspection.critical.push(...imageContractIssues.critical);

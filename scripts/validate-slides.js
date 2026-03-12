@@ -3,6 +3,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+
 import { DEFAULT_SLIDES_DIR, getValidateUsage, parseValidateCliArgs } from '../src/validation/cli.js';
 import {
   createValidationFailure,
@@ -49,7 +50,6 @@ export async function main(args = process.argv.slice(2)) {
   const slidesDir = resolve(process.cwd(), options.slidesDir);
   const result = await validateSlides(slidesDir);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-
   if (result.summary.failedSlides > 0) {
     process.exitCode = 1;
   }
