@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { PDFDocument } from 'pdf-lib';
@@ -44,6 +45,29 @@ function runNodeScript(relativePath, args = [], cwd = REPO_ROOT, env = process.e
     child.on('error', rejectPromise);
     child.on('close', (code) => {
       resolvePromise({ code: code ?? 1, stdout, stderr });
+    });
+  });
+}
+
+function findAvailablePort() {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const server = createServer();
+    server.once('error', rejectPromise);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        server.close(() => rejectPromise(new Error('Failed to allocate a test port.')));
+        return;
+      }
+
+      const { port } = address;
+      server.close((error) => {
+        if (error) {
+          rejectPromise(error);
+          return;
+        }
+        resolvePromise(port);
+      });
     });
   });
 }
@@ -118,6 +142,15 @@ test('validate passes for the canonical ./assets contract fixture', async () => 
   assert.equal(report.slides[0].summary.criticalCount, 0);
 });
 
+test('validate passes for body background-image with canonical ./assets URL', async () => {
+  const result = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', fixturePath('body-background-local-asset')]);
+  assert.equal(result.code, 0, result.stderr || result.stdout);
+
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.summary.failedSlides, 0);
+  assert.equal(report.slides[0].summary.criticalCount, 0);
+});
+
 test('validate reports missing local assets and discouraged path forms', async () => {
   const missing = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', fixturePath('missing-local-asset')]);
   assert.equal(missing.code, 1);
@@ -184,7 +217,7 @@ test('editor server serves canonical local assets under /slides/assets', { concu
   const workspace = await mkdtemp(path.join(os.tmpdir(), 'slides-grab-editor-assets-'));
   const slidesDir = path.join(workspace, 'slides');
   const sourceDir = fixturePath('positive-local-asset');
-  const port = 3762;
+  const port = await findAvailablePort();
 
   await mkdir(path.join(slidesDir, 'assets'), { recursive: true });
   await copyFile(path.join(sourceDir, 'slide-01.html'), path.join(slidesDir, 'slide-01.html'));

@@ -7,6 +7,9 @@ import { chromium } from 'playwright';
 import { DEFAULT_SLIDES_DIR, getValidateUsage, parseValidateCliArgs } from '../src/validation/cli.js';
 import { createValidationFailure, createValidationResult, findSlideFiles, scanSlides } from '../src/validation/core.js';
 
+export const parseCliArgs = parseValidateCliArgs;
+export { DEFAULT_SLIDES_DIR };
+
 export async function validateSlides(slidesDir) {
   const slideFiles = await findSlideFiles(slidesDir);
   if (slideFiles.length === 0) {
