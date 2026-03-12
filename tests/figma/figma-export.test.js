@@ -14,6 +14,7 @@ import {
   ensureOutputDirectory,
   FIGMA_EXPORT_LAYOUT_NAME,
   getFigmaImportCaveats,
+  getFigmaManualImportInstructions,
   normalizeFigmaOutput,
   SLIDE_HEIGHT_INCHES,
   SLIDE_WIDTH_INCHES,
@@ -71,8 +72,12 @@ test('figma command help documents manual import intent', () => {
     encoding: 'utf-8',
   });
 
-  assert.match(output, /Output PPTX file/);
+  assert.match(output, /Output PPTX file \(default: <slides-dir>-figma\.pptx\)/);
   assert.match(output, /slides-grab figma/);
+  assert.match(output, /Manual import:/);
+  assert.match(output, new RegExp(getFigmaManualImportInstructions().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(output, /Figma import caveats:/);
+  assert.match(output, /Show this help message/);
 });
 
 test('configureFigmaExportPresentation applies the repo-standard slide size', () => {
@@ -113,6 +118,37 @@ test('figma exporter generates a pptx with the repo-standard presentation size',
     assert.match(presentationXml, /cy="5143500"/);
   } finally {
     rmSync(outputDir, { recursive: true, force: true });
+  }
+});
+
+test('slides-grab figma creates missing parent directories for nested output paths', () => {
+  const root = mkdtempSync(join(tmpdir(), 'slides-grab-figma-cli-'));
+  const slidesDir = join(root, 'slides');
+  const outputPath = join(root, 'nested', 'exports', 'deck');
+
+  try {
+    mkdirSync(slidesDir, { recursive: true });
+    writeFileSync(join(slidesDir, 'slide-01.html'), createTestSlideHtml(), 'utf-8');
+
+    execFileSync(
+      process.execPath,
+      [
+        'bin/ppt-agent.js',
+        'figma',
+        '--slides-dir',
+        slidesDir,
+        '--output',
+        outputPath,
+      ],
+      {
+        cwd: process.cwd(),
+        encoding: 'utf-8',
+      },
+    );
+
+    assert.equal(existsSync(`${outputPath}.pptx`), true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });
 

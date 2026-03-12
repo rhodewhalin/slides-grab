@@ -32,6 +32,10 @@ export function getFigmaImportCaveats() {
   ];
 }
 
+export function getFigmaManualImportInstructions() {
+  return 'Figma Slides -> Import -> select the generated .pptx file.';
+}
+
 export function configureFigmaExportPresentation(pres) {
   pres.defineLayout({
     name: FIGMA_EXPORT_LAYOUT_NAME,
