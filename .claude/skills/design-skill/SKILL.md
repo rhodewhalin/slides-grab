@@ -541,22 +541,29 @@ This skill is **Stage 2**. It works from the `slide-outline.md` approved by the 
 ### Steps
 
 1. **Analyze + Design**: Read `slide-outline.md`, decide theme/layout, generate HTML slides
-2. **Auto-build viewer**: After slide generation, automatically run:
+2. **Validate slides**: After slide generation or edits, automatically run:
+   ```bash
+   slides-grab validate --slides-dir <path>
+   ```
+3. **Auto-fix validation issues**: If validation fails, fix the source HTML/CSS and re-run validation until it passes
+4. **Auto-build viewer**: After validation passes, automatically run:
    ```bash
    node scripts/build-viewer.js --slides-dir <path>
    ```
-3. **Guide user to review**: Tell the user to check slides in the browser:
+5. **Guide user to review**: Tell the user to check slides in the browser:
    ```
    open <slides-dir>/viewer.html
    ```
-4. **Revision loop**: When the user requests changes to specific slides:
+6. **Revision loop**: When the user requests changes to specific slides:
    - Edit only the relevant HTML file
+   - Re-run `slides-grab validate --slides-dir <path>` and fix any failures
    - Re-run `node scripts/build-viewer.js --slides-dir <path>` to rebuild the viewer
    - Guide user to review again
-5. **Completion**: Repeat the revision loop until the user signals approval for PPTX conversion
+7. **Completion**: Repeat the revision loop until the user signals approval for PPTX conversion
 
 ### Absolute Rules
 - **Never start PPTX conversion without approval** — PPTX conversion is the responsibility of `pptx-skill` and requires explicit user approval.
+- **Never skip validation** — Run `slides-grab validate --slides-dir <path>` after generation or edits and fix failures before review.
 - **Never forget to build the viewer** — Run `node scripts/build-viewer.js --slides-dir <path>` every time slides are generated or modified.
 
 ---

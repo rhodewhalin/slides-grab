@@ -30,10 +30,12 @@ Use **slides-grab-design** (`skills/slides-grab-design/SKILL.md`).
 
 1. Read approved `slide-outline.md`.
 2. Generate `slide-*.html` files in the slides workspace (default: `slides/`).
-3. Build the viewer: `node scripts/build-viewer.js --slides-dir <path>`
-4. Present viewer to user for review.
-5. Revise individual slides based on feedback.
-6. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
+3. Run validation: `slides-grab validate --slides-dir <path>`
+4. If validation fails, automatically fix the slide HTML/CSS until validation passes.
+5. Build the viewer: `node scripts/build-viewer.js --slides-dir <path>`
+6. Present viewer to user for review.
+7. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
+8. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
 
 **Do not proceed to Stage 3 without approval.**
 
