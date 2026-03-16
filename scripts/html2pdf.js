@@ -14,6 +14,7 @@ const DEFAULT_MODE = 'capture';
 const PDF_MODES = new Set(['capture', 'print']);
 const SLIDE_FILE_PATTERN = /^slide-.*\.html$/i;
 const FALLBACK_SLIDE_SIZE = { width: 960, height: 540 };
+const DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR = 2;
 const TARGET_ASPECT_RATIO = 16 / 9;
 const RENDER_SETTLE_MS = 120;
 const CSS_PIXELS_PER_INCH = 96;
@@ -184,6 +185,16 @@ export function buildPdfOptions(widthPx, heightPx) {
     pageRanges: '1',
     margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
     preferCSSPageSize: false,
+  };
+}
+
+export function buildPageOptions(mode = DEFAULT_MODE) {
+  return {
+    viewport: {
+      width: FALLBACK_SLIDE_SIZE.width,
+      height: FALLBACK_SLIDE_SIZE.height,
+    },
+    deviceScaleFactor: normalizeMode(mode) === 'capture' ? DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR : 1,
   };
 }
 
@@ -549,12 +560,7 @@ async function main() {
   }
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({
-    viewport: {
-      width: FALLBACK_SLIDE_SIZE.width,
-      height: FALLBACK_SLIDE_SIZE.height,
-    },
-  });
+  const page = await browser.newPage(buildPageOptions(options.mode));
   const diagnostics = createSlideDiagnostics();
   diagnostics.attach(page);
   const renderedSlides = [];

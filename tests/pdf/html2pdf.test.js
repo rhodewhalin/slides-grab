@@ -8,6 +8,7 @@ import { chromium } from 'playwright';
 
 import {
   buildCapturePdf,
+  buildPageOptions,
   buildPdfOptions,
   findSlideFiles,
   mergePdfBuffers,
@@ -76,6 +77,18 @@ test('buildPdfOptions preserves backgrounds for print rendering', () => {
   assert.equal(options.pageRanges, '1');
   assert.equal(options.width, '960px');
   assert.equal(options.height, '540px');
+});
+
+test('buildPageOptions uses 2x device scale for capture and 1x for print', () => {
+  assert.deepEqual(buildPageOptions('capture'), {
+    viewport: { width: 960, height: 540 },
+    deviceScaleFactor: 2,
+  });
+
+  assert.deepEqual(buildPageOptions('print'), {
+    viewport: { width: 960, height: 540 },
+    deviceScaleFactor: 1,
+  });
 });
 
 test('mergePdfBuffers combines all slide pdf pages into one document', async () => {
