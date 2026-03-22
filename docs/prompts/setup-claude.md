@@ -12,7 +12,7 @@ npx playwright install chromium
 ## 2. Verify
 
 ```bash
-npm exec -- slides-grab --help
+slides-grab --help
 ```
 
 You should see the CLI help output with commands: edit, build-viewer, validate, convert, pdf, etc. Actual export commands require a deck directory containing `slide-*.html`.

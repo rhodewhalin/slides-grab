@@ -30,12 +30,12 @@ Use the installed **slides-grab-design** skill.
 
 1. Read approved `slide-outline.md`.
 2. Generate `slide-*.html` files in the slides workspace (default: `slides/`).
-3. Run validation: `npm exec -- slides-grab validate --slides-dir <path>`
+3. Run validation: `slides-grab validate --slides-dir <path>`
 4. If validation fails, automatically fix the slide HTML/CSS until validation passes.
-5. Build the viewer: `npm exec -- slides-grab build-viewer --slides-dir <path>`
+5. Build the viewer: `slides-grab build-viewer --slides-dir <path>`
 6. Present viewer to user for review.
 7. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
-8. Optionally launch the visual editor: `npm exec -- slides-grab edit --slides-dir <path>`
+8. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
 
 **Do not proceed to Stage 3 without approval.**
 
@@ -44,8 +44,8 @@ Use the installed **slides-grab-design** skill.
 Use the installed **slides-grab-export** skill.
 
 1. Confirm user wants conversion.
-2. Export to PPTX: `npm exec -- slides-grab convert --slides-dir <path> --output <name>.pptx` (**experimental / unstable**)
-3. Export to PDF (if requested): `npm exec -- slides-grab pdf --slides-dir <path> --output <name>.pdf`
+2. Export to PPTX: `slides-grab convert --slides-dir <path> --output <name>.pptx` (**experimental / unstable**)
+3. Export to PDF (if requested): `slides-grab pdf --slides-dir <path> --output <name>.pdf`
 4. Report results.
 
 ---

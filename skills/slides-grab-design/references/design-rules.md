@@ -3,9 +3,9 @@
 These are the packaged design rules for installable `slides-grab` skills.
 
 ## Package-first commands
-- Validate slides: `npm exec -- slides-grab validate --slides-dir <path>`
-- Build review viewer: `npm exec -- slides-grab build-viewer --slides-dir <path>`
-- Launch editor: `npm exec -- slides-grab edit --slides-dir <path>`
+- Validate slides: `slides-grab validate --slides-dir <path>`
+- Build review viewer: `slides-grab build-viewer --slides-dir <path>`
+- Launch editor: `slides-grab edit --slides-dir <path>`
 
 ## Slide spec
 - Slide size: `720pt x 405pt` (16:9)

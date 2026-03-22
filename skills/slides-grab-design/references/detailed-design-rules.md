@@ -20,8 +20,8 @@
 - Never place text directly in `<div>` or `<span>`.
 
 ## Workflow (Stage 2: Design + Human Review)
-- After slide generation or edits, run `npm exec -- slides-grab validate --slides-dir <path>`.
-- After validation passes, run `npm exec -- slides-grab build-viewer --slides-dir <path>`.
+- After slide generation or edits, run `slides-grab validate --slides-dir <path>`.
+- After validation passes, run `slides-grab build-viewer --slides-dir <path>`.
 - Edit only the relevant HTML file during revision loops.
 - Never start PPTX conversion without explicit approval.
 - Never forget to build the viewer after slide changes.

@@ -43,7 +43,7 @@ npx skills add ./node_modules/slides-grab -g -a codex -a claude-code --yes --cop
 ## 4) Verify CLI
 
 ```bash
-npm exec -- slides-grab --help
+slides-grab --help
 ```
 
 Package-install setup verification ends here. Real slide-processing commands such as `slides-grab edit`, `slides-grab convert`, and `slides-grab pdf` need an existing deck directory with `slide-*.html` files. Use `decks/<deck-name>/` or `slides/` only after you have created a deck there.

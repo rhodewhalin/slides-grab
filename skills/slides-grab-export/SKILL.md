@@ -22,11 +22,11 @@ Convert reviewed slide HTML into PDF reliably, and into experimental / unstable 
 ## Workflow
 1. Confirm user approval for conversion.
 2. Run conversion command:
-   - `npm exec -- slides-grab convert --slides-dir <path> --output <name>.pptx` (**experimental / unstable**)
+   - `slides-grab convert --slides-dir <path> --output <name>.pptx` (**experimental / unstable**)
 3. If requested, run PDF conversion:
-   - `npm exec -- slides-grab pdf --slides-dir <path> --output <name>.pdf`
+   - `slides-grab pdf --slides-dir <path> --output <name>.pdf`
 4. If requested, run Figma export:
-   - `npm exec -- slides-grab figma --slides-dir <path> --output <name>-figma.pptx`
+   - `slides-grab figma --slides-dir <path> --output <name>-figma.pptx`
 5. Report success/failure with actionable errors.
 
 ## Rules

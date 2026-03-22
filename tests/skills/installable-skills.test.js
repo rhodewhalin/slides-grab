@@ -15,7 +15,7 @@ test('installable skills use packaged commands and avoid .claude runtime paths',
     const text = readFileSync(file, 'utf-8');
     assert.doesNotMatch(text, /\.claude\/skills\//, `${file} should not reference .claude skill paths`);
     assert.doesNotMatch(text, /node scripts\//, `${file} should not execute repo-local scripts directly`);
-    assert.match(text, /npm exec -- slides-grab|Use the installed/, `${file} should describe installed/package-first usage`);
+    assert.match(text, /slides-grab|Use the installed/, `${file} should describe installed CLI usage`);
   }
 });
 

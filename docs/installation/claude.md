@@ -12,7 +12,7 @@ npx playwright install chromium
 Verify:
 
 ```bash
-npm exec -- slides-grab --help
+slides-grab --help
 ```
 
 ## 2) Install Claude Code Skills

@@ -3,9 +3,9 @@
 These are the packaged export rules for installable `slides-grab` skills.
 
 ## Package-first commands
-- PPTX export: `npm exec -- slides-grab convert --slides-dir <path> --output <name>.pptx`
-- PDF export: `npm exec -- slides-grab pdf --slides-dir <path> --output <name>.pdf`
-- Figma export: `npm exec -- slides-grab figma --slides-dir <path> --output <name>-figma.pptx`
+- PPTX export: `slides-grab convert --slides-dir <path> --output <name>.pptx`
+- PDF export: `slides-grab pdf --slides-dir <path> --output <name>.pdf`
+- Figma export: `slides-grab figma --slides-dir <path> --output <name>-figma.pptx`
 
 ## Export stage rules
 - Only export after the user approves the reviewed HTML slides.

@@ -20,7 +20,7 @@ Then restart Codex so the shared skills are loaded.
 ## 3. Verify
 
 ```bash
-npm exec -- slides-grab --help
+slides-grab --help
 ```
 
 You should see the CLI help output with commands: edit, build-viewer, validate, convert, figma, pdf, etc. Actual export commands require a deck directory containing `slide-*.html`.

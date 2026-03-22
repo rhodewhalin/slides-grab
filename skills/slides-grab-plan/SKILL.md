@@ -31,7 +31,7 @@ Produce an approved `slide-outline.md` before any slide HTML generation.
 - Do not generate slide HTML (`<slides-dir>/slide-*.html`) in this stage.
 - Keep scope to structure and narrative.
 - Ask for approval before moving to design.
-- Assume later stages run through the packaged CLI (`npm exec -- slides-grab ...`).
+- Assume later stages run through the packaged `slides-grab` CLI.
 - Use the packaged CLI and bundled references only; do not depend on unpublished agent-specific files.
 
 ## Reference
