@@ -9,7 +9,7 @@ test('parseArgs applies default slides dir and output', () => {
   assert.deepEqual(parseArgs([]), {
     slidesDir: 'slides',
     output: 'output.pptx',
-    resolution: '',
+    resolution: '2160p',
     help: false,
   });
 });

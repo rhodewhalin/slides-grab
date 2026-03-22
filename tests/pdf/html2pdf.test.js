@@ -25,7 +25,7 @@ test('parseCliArgs applies defaults for output, slides dir, mode, and help', () 
     output: 'slides.pdf',
     slidesDir: 'slides',
     mode: 'capture',
-    resolution: '',
+    resolution: '2160p',
     help: false,
   });
 });

@@ -12,6 +12,7 @@ const {
 // Inline a simplified version that uses Playwright Chromium (not Chrome)
 const DEFAULT_SLIDES_DIR = 'slides';
 const DEFAULT_OUTPUT = 'output.pptx';
+const DEFAULT_RESOLUTION = '2160p';
 const DEFAULT_CAPTURE_VIEWPORT = { width: 960, height: 540 };
 const DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR = 2;
 const TARGET_RASTER_DPI = 150;
@@ -57,7 +58,7 @@ function printUsage() {
       'Options:',
       `  --slides-dir <path>  Slide directory (default: ${DEFAULT_SLIDES_DIR})`,
       `  --output <path>      Output pptx path (default: ${DEFAULT_OUTPUT})`,
-      `  --resolution <preset> Raster size preset: ${getResolutionChoices().join('|')}|4k`,
+      `  --resolution <preset> Raster size preset: ${getResolutionChoices().join('|')}|4k (default: ${DEFAULT_RESOLUTION})`,
       '  -h, --help           Show this help message',
     ].join('\n'),
   );
@@ -76,7 +77,7 @@ function parseArgs(args) {
   const options = {
     slidesDir: DEFAULT_SLIDES_DIR,
     output: DEFAULT_OUTPUT,
-    resolution: '',
+    resolution: DEFAULT_RESOLUTION,
     help: false,
   };
 

@@ -20,6 +20,7 @@ const {
 const DEFAULT_OUTPUT = 'slides.pdf';
 const DEFAULT_SLIDES_DIR = 'slides';
 const DEFAULT_MODE = 'capture';
+const DEFAULT_CAPTURE_RESOLUTION = '2160p';
 const PDF_MODES = new Set(['capture', 'print']);
 const SLIDE_FILE_PATTERN = /^slide-.*\.html$/i;
 const FALLBACK_SLIDE_SIZE = { width: 960, height: 540 };
@@ -38,7 +39,7 @@ function printUsage() {
       `  --output <path>      Output PDF path (default: ${DEFAULT_OUTPUT})`,
       `  --slides-dir <path>  Slide directory (default: ${DEFAULT_SLIDES_DIR})`,
       `  --mode <mode>        PDF export mode: capture|print (default: ${DEFAULT_MODE})`,
-      `  --resolution <preset> Capture raster size preset: ${getResolutionChoices().join('|')}|4k (ignored in print mode)`,
+      `  --resolution <preset> Capture raster size preset: ${getResolutionChoices().join('|')}|4k (default: ${DEFAULT_CAPTURE_RESOLUTION}; ignored in print mode)`,
       '  -h, --help           Show this help message',
       '',
       'Examples:',
@@ -138,7 +139,7 @@ export function parseCliArgs(args) {
     output: DEFAULT_OUTPUT,
     slidesDir: DEFAULT_SLIDES_DIR,
     mode: DEFAULT_MODE,
-    resolution: '',
+    resolution: DEFAULT_CAPTURE_RESOLUTION,
     help: false,
   };
 

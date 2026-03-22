@@ -91,7 +91,7 @@ Run `slides-grab validate --slides-dir <path>` before export to catch missing lo
 
 `slides-grab pdf` now defaults to `--mode capture`, which rasterizes each rendered slide into the PDF for better visual fidelity. Use `--mode print` when searchable/selectable browser text matters more than pixel-perfect parity.
 
-For high-density displays or projector workflows, `slides-grab pdf --resolution <preset>` and `slides-grab convert --resolution <preset>` accept `720p`, `1080p`, `1440p`, `2160p`, or `4k` to raise raster export quality when needed.
+`slides-grab pdf` and `slides-grab convert` now default to `2160p` / `4k` raster output for sharper exports. You can still override with `--resolution <preset>` using `720p`, `1080p`, `1440p`, `2160p`, or `4k` when you want smaller or faster artifacts.
 
 ### Multi-Deck Workflow
 
