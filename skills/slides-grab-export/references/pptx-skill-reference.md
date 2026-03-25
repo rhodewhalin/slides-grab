@@ -1,8 +1,3 @@
----
-name: pptx-skill
-description: Convert HTML slides to experimental / unstable PowerPoint (PPTX) files. Use when best-effort PPTX generation, editing, or thumbnail creation is needed.
----
-
 # PPTX Skill - Experimental / Unstable PowerPoint Conversion
 
 Converts HTML slides into experimental / unstable PowerPoint presentation files on a best-effort basis.

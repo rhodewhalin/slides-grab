@@ -51,12 +51,18 @@ function runPdfExport(args, cwd) {
 
 function canExtractPdfText() {
   const probe = spawnSync('pdftotext', ['-v'], { encoding: 'utf8' });
-  return probe.status === 0 || probe.stderr.includes('pdftotext');
+  if (probe.error?.code === 'ENOENT') {
+    return false;
+  }
+  return probe.status === 0 || probe.status === 1;
 }
 
 function canRasterizePdfPages() {
   const probe = spawnSync('pdftoppm', ['-v'], { encoding: 'utf8' });
-  return probe.status === 0 || probe.stderr.includes('pdftoppm');
+  if (probe.error?.code === 'ENOENT') {
+    return false;
+  }
+  return probe.status === 0 || probe.status === 1;
 }
 
 function extractPdfText(pdfPath) {
@@ -306,6 +312,61 @@ test('print mode clips off-canvas bleed fixtures instead of leaving a right gutt
 
     const edgeSample = await readRelativePixel(pngPath, 0.993, 0.5);
     assert.deepEqual(edgeSample.pixel.slice(0, 3), [248, 245, 236]);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('print mode preserves body padding used as slide margin', { concurrency: false, timeout: 120000 }, async (t) => {
+  if (!canRasterizePdfPages()) {
+    t.skip('pdftoppm is required for rendered-image verification');
+  }
+
+  const workspace = await mkdtemp(join(os.tmpdir(), 'html2pdf-e2e-body-padding-print-'));
+
+  try {
+    const slidesDir = join(workspace, 'slides');
+    await mkdir(slidesDir, { recursive: true });
+
+    const slideHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 960px;
+      height: 540px;
+      overflow: hidden;
+      padding: 48px 64px;
+      background: #102030;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+    .panel {
+      width: 100%;
+      height: 100%;
+      background: #F4EBD0;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel"></div>
+</body>
+</html>`;
+
+    await writeFile(join(slidesDir, 'slide-01.html'), slideHtml, 'utf8');
+
+    const outputPath = join(workspace, 'body-padding.pdf');
+    const rasterPrefix = join(workspace, 'body-padding-page-1');
+
+    await runPdfExport(['--slides-dir', 'slides', '--mode', 'print', '--output', outputPath], workspace);
+    const pngPath = await rasterizePdfPage(outputPath, rasterPrefix, 1);
+
+    const edgeSample = await readRelativePixel(pngPath, 0.02, 0.5);
+    const innerSample = await readRelativePixel(pngPath, 0.12, 0.5);
+
+    assertPixelApproximately(edgeSample.pixel.slice(0, 3), [16, 32, 48]);
+    assertPixelApproximately(innerSample.pixel.slice(0, 3), [244, 235, 208]);
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }

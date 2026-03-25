@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { PDFDocument } from 'pdf-lib';
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 
 import {
   buildCapturePdf,
@@ -24,24 +25,35 @@ test('parseCliArgs applies defaults for output, slides dir, mode, and help', () 
     output: 'slides.pdf',
     slidesDir: 'slides',
     mode: 'capture',
+    resolution: '2160p',
     help: false,
   });
 });
 
-test('parseCliArgs reads output, slides dir, and mode options', () => {
+test('parseCliArgs reads output, slides dir, mode, and resolution options', () => {
   assert.equal(parseCliArgs(['--output', 'dist/custom.pdf']).output, 'dist/custom.pdf');
   assert.equal(parseCliArgs(['--output=deck.pdf']).output, 'deck.pdf');
   assert.equal(parseCliArgs(['--slides-dir', 'decks/product-a']).slidesDir, 'decks/product-a');
   assert.equal(parseCliArgs(['--slides-dir=slides-q1']).slidesDir, 'slides-q1');
   assert.equal(parseCliArgs(['--mode', 'print']).mode, 'print');
   assert.equal(parseCliArgs(['--mode=CAPTURE']).mode, 'capture');
+  assert.equal(parseCliArgs(['--resolution', '2160p']).resolution, '2160p');
+  assert.equal(parseCliArgs(['--resolution=4k']).resolution, '2160p');
+});
+
+test('parseCliArgs ignores resolution when mode is print', () => {
+  const parsed = parseCliArgs(['--mode', 'print', '--resolution', '2160p']);
+  assert.equal(parsed.mode, 'print');
+  assert.equal(parsed.resolution, '');
 });
 
 test('parseCliArgs rejects missing and invalid option values', () => {
   assert.throws(() => parseCliArgs(['--output']), /missing value/i);
   assert.throws(() => parseCliArgs(['--slides-dir']), /missing value/i);
   assert.throws(() => parseCliArgs(['--mode']), /missing value/i);
+  assert.throws(() => parseCliArgs(['--resolution']), /missing value/i);
   assert.throws(() => parseCliArgs(['--mode', 'vector']), /unknown pdf mode/i);
+  assert.throws(() => parseCliArgs(['--resolution', 'retina']), /unknown resolution/i);
 });
 
 test('sortSlideFiles orders by slide number then file name', () => {
@@ -91,6 +103,18 @@ test('buildPageOptions uses 2x device scale for capture and 1x for print', () =>
   });
 });
 
+test('buildPageOptions honors requested capture resolution presets', () => {
+  assert.deepEqual(buildPageOptions('capture', '1440p'), {
+    viewport: { width: 960, height: 540 },
+    deviceScaleFactor: 1440 / 540,
+  });
+
+  assert.deepEqual(buildPageOptions('print', '2160p'), {
+    viewport: { width: 960, height: 540 },
+    deviceScaleFactor: 1,
+  });
+});
+
 test('mergePdfBuffers combines all slide pdf pages into one document', async () => {
   async function createSinglePagePdf() {
     const doc = await PDFDocument.create();
@@ -120,6 +144,48 @@ test('renderSlideToPdf uses inner wrapper dimensions when body has no slide size
 
     assert.equal(Math.round(width), 720);
     assert.equal(Math.round(height), 405);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('renderSlideToPdf print mode ignores resolution overrides', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const fixturesDir = path.resolve('tests/pdf/fixtures');
+
+  try {
+    const result = await renderSlideToPdf(page, 'slide-missing-body-dimensions.html', fixturesDir, {
+      mode: 'print',
+      resolution: '2160p',
+    });
+    const pdfDoc = await PDFDocument.load(result.pdfBytes);
+    const [pdfPage] = pdfDoc.getPages();
+    const { width, height } = pdfPage.getSize();
+
+    assert.equal(Math.round(width), 720);
+    assert.equal(Math.round(height), 405);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('renderSlideToPdf capture mode normalizes raster size to requested resolution', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage(buildPageOptions('capture', '720p'));
+  const fixturesDir = path.resolve('tests/pdf/fixtures');
+
+  try {
+    const result = await renderSlideToPdf(page, 'slide-missing-body-dimensions.html', fixturesDir, {
+      mode: 'capture',
+      resolution: '720p',
+    });
+    const metadata = await sharp(result.pngBytes).metadata();
+
+    assert.equal(result.width, 960);
+    assert.equal(result.height, 540);
+    assert.equal(metadata.width, 1280);
+    assert.equal(metadata.height, 720);
   } finally {
     await browser.close();
   }

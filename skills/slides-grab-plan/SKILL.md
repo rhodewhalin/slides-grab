@@ -31,7 +31,10 @@ Produce an approved `slide-outline.md` before any slide HTML generation.
 - Do not generate slide HTML (`<slides-dir>/slide-*.html`) in this stage.
 - Keep scope to structure and narrative.
 - Ask for approval before moving to design.
+- Assume later stages run through the packaged `slides-grab` CLI.
+- Use the packaged CLI and bundled references only; do not depend on unpublished agent-specific files.
 
 ## Reference
-If needed, use rules from:
-- `.claude/skills/plan-skill/SKILL.md`
+If needed, use the bundled outline reference:
+- `references/outline-format.md`
+- `references/plan-workflow-reference.md` — archived detailed planning workflow and organizer-agent guidance

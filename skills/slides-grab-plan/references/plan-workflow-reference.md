@@ -1,8 +1,3 @@
----
-name: plan-skill
-description: Supervisor skill that plans presentation outlines and manages user approval loops. Use when designing PPT structure, slide composition, or writing outlines.
----
-
 # Plan Skill - Presentation Outline Planning
 
 A **supervisor skill** that takes a user topic, generates a `slide-outline.md` outline, and manages a revision loop until the user approves.

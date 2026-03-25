@@ -1,8 +1,3 @@
----
-name: presentation-skill
-description: End-to-end presentation workflow. Use when making a full presentation from scratch — planning, designing slides, editing, and exporting. PDF is preferred; PPTX/Figma export is experimental / unstable.
----
-
 # Presentation Skill - Full Workflow Orchestrator
 
 Guides you through the complete presentation pipeline from topic to exported file.

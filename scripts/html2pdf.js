@@ -1,16 +1,26 @@
 #!/usr/bin/env node
 
 import { readdir, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { PDFDocument } from 'pdf-lib';
+import sharp from 'sharp';
 
 import { ensureSlidesPassValidation } from './validate-slides.js';
+
+const require = createRequire(import.meta.url);
+const {
+  getResolutionChoices,
+  getResolutionSize,
+  normalizeResolutionPreset,
+} = require('../src/export-resolution.cjs');
 
 const DEFAULT_OUTPUT = 'slides.pdf';
 const DEFAULT_SLIDES_DIR = 'slides';
 const DEFAULT_MODE = 'capture';
+const DEFAULT_CAPTURE_RESOLUTION = '2160p';
 const PDF_MODES = new Set(['capture', 'print']);
 const SLIDE_FILE_PATTERN = /^slide-.*\.html$/i;
 const FALLBACK_SLIDE_SIZE = { width: 960, height: 540 };
@@ -29,12 +39,14 @@ function printUsage() {
       `  --output <path>      Output PDF path (default: ${DEFAULT_OUTPUT})`,
       `  --slides-dir <path>  Slide directory (default: ${DEFAULT_SLIDES_DIR})`,
       `  --mode <mode>        PDF export mode: capture|print (default: ${DEFAULT_MODE})`,
+      `  --resolution <preset> Capture raster size preset: ${getResolutionChoices().join('|')}|4k (default: ${DEFAULT_CAPTURE_RESOLUTION}; ignored in print mode)`,
       '  -h, --help           Show this help message',
       '',
       'Examples:',
       '  node scripts/html2pdf.js',
       '  node scripts/html2pdf.js --output dist/deck.pdf',
       '  node scripts/html2pdf.js --mode print --output dist/searchable.pdf',
+      '  node scripts/html2pdf.js --resolution 2160p --output dist/deck-4k.pdf',
     ].join('\n'),
   );
   process.stdout.write('\n');
@@ -76,6 +88,25 @@ function cssPixelsToPdfPoints(value) {
   return Math.round((normalizeDimension(value, 0) * PDF_POINTS_PER_INCH) / CSS_PIXELS_PER_INCH);
 }
 
+async function normalizeCaptureRasterSize(pngBytes, resolution = '') {
+  const targetSize = getResolutionSize(resolution);
+  if (!targetSize) {
+    return pngBytes;
+  }
+
+  const metadata = await sharp(pngBytes).metadata();
+  const currentWidth = normalizeDimension(metadata.width, targetSize.width);
+  const currentHeight = normalizeDimension(metadata.height, targetSize.height);
+  if (currentWidth === targetSize.width && currentHeight === targetSize.height) {
+    return pngBytes;
+  }
+
+  return sharp(pngBytes)
+    .resize(targetSize.width, targetSize.height, { fit: 'fill' })
+    .png()
+    .toBuffer();
+}
+
 function formatDiagnosticEntry(entry) {
   const prefix = entry.slideFile ? `${entry.slideFile}: ` : '';
   return `${prefix}${entry.message}`;
@@ -108,6 +139,7 @@ export function parseCliArgs(args) {
     output: DEFAULT_OUTPUT,
     slidesDir: DEFAULT_SLIDES_DIR,
     mode: DEFAULT_MODE,
+    resolution: DEFAULT_CAPTURE_RESOLUTION,
     help: false,
   };
 
@@ -152,6 +184,17 @@ export function parseCliArgs(args) {
       continue;
     }
 
+    if (arg === '--resolution') {
+      options.resolution = normalizeResolutionPreset(readOptionValue(args, i, '--resolution'));
+      i += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--resolution=')) {
+      options.resolution = normalizeResolutionPreset(arg.slice('--resolution='.length));
+      continue;
+    }
+
     throw new Error(`Unknown option: ${arg}`);
   }
 
@@ -165,6 +208,10 @@ export function parseCliArgs(args) {
   options.output = options.output.trim();
   options.slidesDir = options.slidesDir.trim();
   options.mode = normalizeMode(options.mode);
+  options.resolution = normalizeResolutionPreset(options.resolution);
+  if (options.mode === 'print') {
+    options.resolution = '';
+  }
 
   return options;
 }
@@ -188,13 +235,18 @@ export function buildPdfOptions(widthPx, heightPx) {
   };
 }
 
-export function buildPageOptions(mode = DEFAULT_MODE) {
+export function buildPageOptions(mode = DEFAULT_MODE, resolution = '') {
+  const targetResolution = normalizeMode(mode) === 'capture' ? getResolutionSize(resolution) : null;
   return {
     viewport: {
       width: FALLBACK_SLIDE_SIZE.width,
       height: FALLBACK_SLIDE_SIZE.height,
     },
-    deviceScaleFactor: normalizeMode(mode) === 'capture' ? DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR : 1,
+    deviceScaleFactor: normalizeMode(mode) === 'capture'
+      ? targetResolution
+        ? targetResolution.height / FALLBACK_SLIDE_SIZE.height
+        : DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR
+      : 1,
   };
 }
 
@@ -351,7 +403,6 @@ export async function normalizeBodyToSlideFrame(page, slideFrame) {
     const documentElement = document.documentElement;
 
     body.style.margin = '0';
-    body.style.padding = '0';
     body.style.width = `${width}px`;
     body.style.height = `${height}px`;
     body.style.minWidth = `${width}px`;
@@ -470,6 +521,7 @@ export async function renderSlideToPdf(page, slideFile, slidesDir, options = {})
   const slidePath = join(slidesDir, slideFile);
   const slideUrl = pathToFileURL(slidePath).href;
   const mode = normalizeMode(options.mode ?? DEFAULT_MODE);
+  const captureResolution = mode === 'capture' ? normalizeResolutionPreset(options.resolution ?? '') : '';
 
   await page.goto(slideUrl, { waitUntil: 'load' });
   await waitForSlideRenderReady(page, options);
@@ -495,11 +547,12 @@ export async function renderSlideToPdf(page, slideFile, slidesDir, options = {})
         height: viewportSize.height,
       },
     });
+    const normalizedPngBytes = await normalizeCaptureRasterSize(pngBytes, captureResolution);
     return {
       mode,
       width: normalizedSlideFrame.width,
       height: normalizedSlideFrame.height,
-      pngBytes,
+      pngBytes: normalizedPngBytes,
     };
   }
 
@@ -560,7 +613,7 @@ async function main() {
   }
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage(buildPageOptions(options.mode));
+  const page = await browser.newPage(buildPageOptions(options.mode, options.resolution));
   const diagnostics = createSlideDiagnostics();
   diagnostics.attach(page);
   const renderedSlides = [];
@@ -569,7 +622,10 @@ async function main() {
     for (const slideFile of slideFiles) {
       diagnostics.beginSlide(slideFile);
       try {
-        const slideResult = await renderSlideToPdf(page, slideFile, slidesDir, { mode: options.mode });
+        const slideResult = await renderSlideToPdf(page, slideFile, slidesDir, {
+          mode: options.mode,
+          resolution: options.resolution,
+        });
         renderedSlides.push(slideResult);
       } catch (error) {
         throw decorateError(error, slideFile, diagnostics.getSlideDiagnostics(slideFile));

@@ -31,16 +31,16 @@ Paste one of these into your coding agent:
 **Claude Code:**
 
 ```
-Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/prompts/setup-claude.md and follow every step.
+Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/installation/claude.md and follow every step.
 ```
 
 **Codex:**
 
 ```
-Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/prompts/setup-codex.md and follow every step.
+Read https://raw.githubusercontent.com/vkehfdl1/slides-grab/main/docs/installation/codex.md and follow every step.
 ```
 
-Or clone manually:
+Or use the repo directly if you want to develop on slides-grab itself:
 
 ```bash
 git clone https://github.com/vkehfdl1/slides-grab.git && cd slides-grab
@@ -48,6 +48,14 @@ npm ci && npx playwright install chromium
 ```
 
 > Requires **Node.js >= 18**.
+
+### No-clone install
+
+```bash
+npm install slides-grab
+npx playwright install chromium
+npx skills add ./node_modules/slides-grab -g -a codex -a claude-code --yes --copy
+```
 
 ## Why This Project?
 
@@ -69,8 +77,10 @@ slides-grab edit              # Launch visual slide editor
 slides-grab build-viewer      # Build single-file viewer.html
 slides-grab validate          # Validate slide HTML (Playwright-based)
 slides-grab convert           # Export to experimental / unstable PPTX
+slides-grab convert --resolution 2160p  # Higher-resolution raster PPTX export
 slides-grab figma             # Export an experimental / unstable Figma Slides importable PPTX
 slides-grab pdf               # Export PDF in capture mode (default)
+slides-grab pdf --resolution 2160p  # Higher-resolution image-backed PDF export
 slides-grab pdf --mode print  # Export searchable/selectable text PDF
 slides-grab tldraw           # Render a .tldr diagram into a slide-sized local SVG asset
 slides-grab list-templates    # Show available slide templates
@@ -89,6 +99,8 @@ Slides should store local image files in `<slides-dir>/assets/` and reference th
 Run `slides-grab validate --slides-dir <path>` before export to catch missing local assets and discouraged path forms.
 
 `slides-grab pdf` now defaults to `--mode capture`, which rasterizes each rendered slide into the PDF for better visual fidelity. Use `--mode print` when searchable/selectable browser text matters more than pixel-perfect parity.
+
+`slides-grab pdf` and `slides-grab convert` now default to `2160p` / `4k` raster output for sharper exports. You can still override with `--resolution <preset>` using `720p`, `1080p`, `1440p`, `2160p`, or `4k` when you want smaller or faster artifacts.
 
 ### Multi-Deck Workflow
 
@@ -136,18 +148,24 @@ This command reuses the HTML to PPTX pipeline and emits a `.pptx` deck intended 
 
 ## Installation Guides
 
-- [Claude Code setup](docs/prompts/setup-claude.md)
-- [Codex setup](docs/prompts/setup-codex.md)
 - [Claude detailed guide](docs/installation/claude.md)
 - [Codex detailed guide](docs/installation/codex.md)
 
 ## npm Package
 
-Also available as an npm package for standalone CLI usage:
+Also available as an npm package for standalone CLI + skill usage:
 
 ```bash
 npm install slides-grab
 ```
+
+Install shared agent skills with Vercel Agent Skills:
+
+```bash
+npx skills add ./node_modules/slides-grab -g -a codex -a claude-code --yes --copy
+```
+
+This npm-install path is enough for normal usage. Clone the repo only when you want to modify or contribute to `slides-grab` itself.
 
 ## Project Structure
 
@@ -157,8 +175,7 @@ src/editor/       Visual editor (HTML + JS client modules)
 scripts/          Build, validate, convert, editor server
 templates/        Slide HTML templates (cover, content, chart, ...)
 themes/           Color themes (modern-dark, executive, sage, ...)
-.claude/skills/   Claude Code skill definitions
-skills/           Codex skill definitions
+skills/           Shared Vercel-installable agent skills + references
 docs/             Installation & usage guides
 ```
 

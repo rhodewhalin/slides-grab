@@ -22,17 +22,22 @@ Convert reviewed slide HTML into PDF reliably, and into experimental / unstable 
 ## Workflow
 1. Confirm user approval for conversion.
 2. Run conversion command:
-   - `node .claude/skills/pptx-skill/scripts/html2pptx.js` (**experimental / unstable**)
-   - or `slides-grab convert --slides-dir <path>` (**experimental / unstable**)
+   - `slides-grab convert --slides-dir <path> --output <name>.pptx` (**experimental / unstable**)
 3. If requested, run PDF conversion:
-   - `slides-grab pdf --slides-dir <path>`
-4. Report success/failure with actionable errors.
+   - `slides-grab pdf --slides-dir <path> --output <name>.pdf`
+4. If requested, run Figma export:
+   - `slides-grab figma --slides-dir <path> --output <name>-figma.pptx`
+5. Report success/failure with actionable errors.
 
 ## Rules
 - Do not modify slide content during conversion stage unless explicitly requested.
 - If conversion fails, diagnose and fix root causes in source HTML/CSS.
 - Always tell the user that PPTX and Figma export are experimental / unstable and may require manual cleanup.
+- Use the packaged CLI and bundled references only; do not depend on unpublished agent-specific files.
 
 ## Reference
 For detailed conversion behavior and tools, use:
-- `.claude/skills/pptx-skill/SKILL.md`
+- `references/export-rules.md`
+- `references/pptx-skill-reference.md` — archived full PPTX workflow guidance
+- `references/html2pptx.md` — archived converter usage guide
+- `references/ooxml.md` — archived OOXML reference

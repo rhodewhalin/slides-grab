@@ -1,8 +1,3 @@
----
-name: design-skill
-description: Design presentation slides as polished HTML. Use when generating slide HTML, visual design, or layout composition is needed.
----
-
 # Design Skill - Professional Presentation Design System
 
 A skill for designing HTML slides for top-tier business presentations.
