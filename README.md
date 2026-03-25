@@ -119,7 +119,7 @@ slides-grab figma      --slides-dir decks/my-deck --output decks/my-deck-figma.p
 
 ### Tldraw Diagram Assets
 
-Use `slides-grab tldraw` when you want a `tldraw` diagram to fit an exact slide region and remain export-friendly as a local SVG asset:
+Use `slides-grab tldraw` when you want a newly authored `tldraw` diagram to fit an exact slide region and remain export-friendly as a local SVG asset. The command supports current-format `.tldr` files and store-snapshot JSON; legacy pre-records `.tldr` files must be reopened and resaved in a current `tldraw` build first:
 
 ```bash
 slides-grab tldraw \

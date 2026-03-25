@@ -87,6 +87,10 @@ function getInstalledPackageVersion(moduleName) {
   return packageJson.version;
 }
 
+function isLegacyTldrawPayload(payload) {
+  return Boolean(payload && typeof payload === 'object' && payload.document && payload.document.version);
+}
+
 export function buildTldrawImportUrl() {
   const tldrawVersion = getInstalledPackageVersion('tldraw');
   const reactVersion = getInstalledPackageVersion('react');
@@ -215,7 +219,7 @@ export function getTldrawUsage() {
     'Usage: node scripts/render-tldraw.js [options]',
     '',
     'Options:',
-    '  --input <path>       Input .tldr or store-snapshot JSON file',
+    '  --input <path>       Input current-format .tldr or store-snapshot JSON file',
     `  --output <path>      Output SVG asset path (default: ${DEFAULT_TLDRAW_OUTPUT})`,
     `  --width <px>         Exact output width in CSS pixels (default: ${DEFAULT_TLDRAW_WIDTH})`,
     `  --height <px>        Exact output height in CSS pixels (default: ${DEFAULT_TLDRAW_HEIGHT})`,
@@ -223,6 +227,9 @@ export function getTldrawUsage() {
     '  --background <css>   Optional wrapper background fill (default: transparent)',
     '  --page-id <id>       Optional tldraw page id to export',
     '  -h, --help           Show this help message',
+    '',
+    'Notes:',
+    '  - Legacy pre-records .tldr files are not supported. Open and resave them in a current tldraw build first.',
     '',
     'Examples:',
     '  node scripts/render-tldraw.js --input slides/assets/diagram.tldr --output slides/assets/diagram.svg',
@@ -233,6 +240,10 @@ export function getTldrawUsage() {
 export function normalizeTldrawSnapshot(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('Expected the tldraw input file to contain a JSON object.');
+  }
+
+  if (isLegacyTldrawPayload(payload)) {
+    throw new Error('Legacy pre-records .tldr files are not supported yet. Open the diagram in a current tldraw build and save it again before exporting.');
   }
 
   if (payload.store && payload.schema) {
@@ -255,7 +266,7 @@ export function normalizeTldrawSnapshot(payload) {
     };
   }
 
-  throw new Error('Input JSON must contain either { store, schema } or { records, schema }.');
+  throw new Error('Input JSON must contain either { store, schema } or a current-format { records, schema } tldraw file.');
 }
 
 export function buildFixedSizeSvg(

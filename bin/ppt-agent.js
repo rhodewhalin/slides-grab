@@ -156,8 +156,8 @@ program
 
 program
   .command('tldraw')
-  .description('Render a .tldr or store-snapshot JSON file to an exact-size SVG asset for slides')
-  .option('--input <path>', 'Input .tldr or snapshot JSON file')
+  .description('Render a current-format .tldr or store-snapshot JSON file to an exact-size SVG asset for slides')
+  .option('--input <path>', 'Input current-format .tldr or snapshot JSON file')
   .option('--output <path>', 'Output SVG asset path')
   .option('--width <number>', 'Exact output width in CSS pixels')
   .option('--height <number>', 'Exact output height in CSS pixels')
