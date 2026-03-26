@@ -9,13 +9,52 @@ export const SLIDE_SIZE = { width: 960, height: 540 };
 
 const PPT_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'SKILL.md');
 const DETAILED_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'detailed-design-rules.md');
+const BEAUTIFUL_SLIDE_DEFAULTS_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'beautiful-slide-defaults.md');
+const EDITOR_PPT_DESIGN_SECTION_HEADINGS = [
+  '## Workflow',
+  '## Rules',
+];
 const DETAILED_DESIGN_SECTION_HEADINGS = [
   '## Base Settings',
-  '### 4. Image Usage Rules (Local Asset / Data URL / Remote URL / Placeholder)',
   '## Text Usage Rules',
   '## Workflow (Stage 2: Design + Human Review)',
   '## Important Notes',
 ];
+const BEAUTIFUL_SLIDE_DEFAULTS_SECTION_HEADINGS = [
+  '## Working Model',
+  '## Beautiful Defaults for Slides',
+  '## Narrative Sequence for Decks',
+  '## Review Litmus',
+];
+const EDITOR_PPT_DESIGN_DUPLICATE_PATTERNS = [
+  /visual thesis/i,
+  /content plan/i,
+  /dominant visual anchor/i,
+  /cardless layouts/i,
+  /whitespace, alignment, scale, cropping, and contrast/i,
+  /opening slides and section dividers like posters/i,
+];
+const EDITOR_PPT_DESIGN_SKILL_FALLBACK = [
+  '## Workflow',
+  '1. Read approved `slide-outline.md` or the existing slide before editing.',
+  '2. Run `slides-grab validate --slides-dir <path>` after generation or edits.',
+  '3. If validation fails, automatically fix the source slide HTML/CSS and re-run validation until it passes.',
+  '4. Run `slides-grab build-viewer --slides-dir <path>` only after validation passes.',
+  '5. Run the slide litmus check from `references/beautiful-slide-defaults.md` before presenting the deck for review.',
+  '6. Iterate on user feedback by editing only requested slide files, then re-run validation and rebuild the viewer.',
+  '7. Keep revising until user approves conversion stage.',
+  '',
+  '## Rules',
+  '- Keep slide size 720pt x 405pt.',
+  '- Keep semantic text tags (`p`, `h1-h6`, `ul`, `ol`, `li`).',
+  '- Put local images under `<slides-dir>/assets/` and reference them as `./assets/<file>`.',
+  '- Allow `data:` URLs when the slide must be fully self-contained.',
+  '- Treat remote `https://` images as best-effort only, and never use absolute filesystem paths.',
+  '- Prefer `<img>` for slide imagery and `data-image-placeholder` when no final asset exists.',
+  '- Do not present slides for review until `slides-grab validate --slides-dir <path>` passes.',
+  '- Do not start conversion before approval.',
+  '- Use the packaged CLI and bundled references only; do not depend on unpublished agent-specific files.',
+].join('\n');
 const DETAILED_DESIGN_SKILL_FALLBACK = [
   '## Base Settings',
   '',
@@ -51,9 +90,38 @@ const DETAILED_DESIGN_SKILL_FALLBACK = [
   '- Always include # prefix in CSS colors.',
   '- Never place text directly in div/span.',
 ].join('\n');
+const BEAUTIFUL_SLIDE_DEFAULTS_FALLBACK = [
+  '## Working Model',
+  '',
+  'Before building the deck, write two things:',
+  '- **visual thesis** — one sentence describing the mood, material, energy, and imagery treatment.',
+  '- **content plan** — opener → support/proof → detail/story → close/CTA or decision.',
+  '- Define design tokens early: background, surface, primary text, muted text, accent, plus display/headline/body/caption roles.',
+  '',
+  '## Beautiful Defaults for Slides',
+  '- Start with composition, not components.',
+  '- Treat the opening slide like a poster and make the title or brand the loudest text.',
+  '- Give each slide one job, one primary takeaway, and one dominant visual anchor.',
+  '- Keep copy short enough to scan in seconds.',
+  '- Use whitespace, alignment, scale, cropping, and contrast before adding chrome.',
+  '- Limit the system by default: two typefaces max and one accent color.',
+  '- Default to cardless layouts unless a card improves structure or understanding.',
+  '',
+  '## Narrative Sequence for Decks',
+  '- Opener → support/proof → detail/story → close/CTA or decision.',
+  '- Section dividers should reset the visual tempo.',
+  '',
+  '## Review Litmus',
+  '- Can the audience grasp the main point of each slide in 3–5 seconds?',
+  '- Does the slide have one dominant idea instead of competing blocks?',
+  '- Is there one real visual anchor, not just decoration?',
+  '- Would this still feel premium without shadows, cards, or extra chrome?',
+].join('\n');
 
 let cachedPptDesignSkillPrompt = null;
-let cachedDetailedDesignSkillPrompt = null;
+let cachedEditorPptDesignSkillPrompt = null;
+let cachedStructuralDesignSkillPrompt = null;
+let cachedSlideArtDirectionPrompt = null;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -142,6 +210,25 @@ export function getPptDesignSkillPrompt() {
   return cachedPptDesignSkillPrompt;
 }
 
+function getEditorPptDesignSkillPrompt() {
+  if (cachedEditorPptDesignSkillPrompt !== null) {
+    return cachedEditorPptDesignSkillPrompt;
+  }
+
+  const prompt = loadMarkdownSections(
+    PPT_DESIGN_SKILL_PATH,
+    EDITOR_PPT_DESIGN_SECTION_HEADINGS,
+    EDITOR_PPT_DESIGN_SKILL_FALLBACK,
+  );
+
+  cachedEditorPptDesignSkillPrompt = pruneDuplicateLines(
+    prompt,
+    EDITOR_PPT_DESIGN_DUPLICATE_PATTERNS,
+  );
+
+  return cachedEditorPptDesignSkillPrompt;
+}
+
 function extractMarkdownSection(markdown, heading) {
   const lines = markdown.split('\n');
   const startIndex = lines.findIndex((line) => line.trim() === heading.trim());
@@ -168,25 +255,74 @@ function extractMarkdownSection(markdown, heading) {
   return extracted.join('\n').trim();
 }
 
-export function getDetailedDesignSkillPrompt() {
-  if (cachedDetailedDesignSkillPrompt !== null) {
-    return cachedDetailedDesignSkillPrompt;
+function pruneDuplicateLines(markdown, patterns) {
+  const lines = markdown.split('\n');
+  const filtered = [];
+
+  for (const line of lines) {
+    if (patterns.some((pattern) => pattern.test(line))) {
+      continue;
+    }
+
+    const previousLine = filtered.at(-1) ?? '';
+    if (line.trim() === '' && previousLine.trim() === '') {
+      continue;
+    }
+
+    filtered.push(line);
   }
 
+  return filtered.join('\n').trim();
+}
+
+function loadMarkdownSections(markdownPath, headings, fallback) {
   try {
-    const markdown = readFileSync(DETAILED_DESIGN_SKILL_PATH, 'utf8');
-    const sections = DETAILED_DESIGN_SECTION_HEADINGS
+    const markdown = readFileSync(markdownPath, 'utf8');
+    const sections = headings
       .map((heading) => extractMarkdownSection(markdown, heading))
       .filter(Boolean);
 
-    cachedDetailedDesignSkillPrompt = sections.length > 0
+    return sections.length > 0
       ? sections.join('\n\n')
-      : DETAILED_DESIGN_SKILL_FALLBACK;
+      : fallback;
   } catch {
-    cachedDetailedDesignSkillPrompt = DETAILED_DESIGN_SKILL_FALLBACK;
+    return fallback;
+  }
+}
+
+function getStructuralDesignSkillPrompt() {
+  if (cachedStructuralDesignSkillPrompt !== null) {
+    return cachedStructuralDesignSkillPrompt;
   }
 
-  return cachedDetailedDesignSkillPrompt;
+  cachedStructuralDesignSkillPrompt = loadMarkdownSections(
+    DETAILED_DESIGN_SKILL_PATH,
+    DETAILED_DESIGN_SECTION_HEADINGS,
+    DETAILED_DESIGN_SKILL_FALLBACK,
+  );
+
+  return cachedStructuralDesignSkillPrompt;
+}
+
+function getSlideArtDirectionPrompt() {
+  if (cachedSlideArtDirectionPrompt !== null) {
+    return cachedSlideArtDirectionPrompt;
+  }
+
+  cachedSlideArtDirectionPrompt = loadMarkdownSections(
+    BEAUTIFUL_SLIDE_DEFAULTS_PATH,
+    BEAUTIFUL_SLIDE_DEFAULTS_SECTION_HEADINGS,
+    BEAUTIFUL_SLIDE_DEFAULTS_FALLBACK,
+  );
+
+  return cachedSlideArtDirectionPrompt;
+}
+
+export function getDetailedDesignSkillPrompt() {
+  return [
+    getStructuralDesignSkillPrompt(),
+    getSlideArtDirectionPrompt(),
+  ].filter(Boolean).join('\n\n');
 }
 
 export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selections = [] }) {
@@ -215,7 +351,7 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
     ];
   });
 
-  const pptDesignSkillPrompt = getPptDesignSkillPrompt();
+  const pptDesignSkillPrompt = getEditorPptDesignSkillPrompt();
   const skillLines = pptDesignSkillPrompt
     ? [
         'Project skill guidance (follow strictly):',
@@ -224,12 +360,21 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
         '',
       ]
     : [];
-  const detailedDesignSkillPrompt = getDetailedDesignSkillPrompt();
+  const detailedDesignSkillPrompt = getStructuralDesignSkillPrompt();
   const detailedSkillLines = detailedDesignSkillPrompt
     ? [
         'Detailed design/export guardrails (selected from the full design system):',
         `Primary source: ${DETAILED_DESIGN_SKILL_PATH}`,
         detailedDesignSkillPrompt,
+        '',
+      ]
+    : [];
+  const slideArtDirectionPrompt = getSlideArtDirectionPrompt();
+  const slideArtDirectionLines = slideArtDirectionPrompt
+    ? [
+        'Slide art direction defaults (packaged guidance for beautiful HTML slides):',
+        `Primary source: ${BEAUTIFUL_SLIDE_DEFAULTS_PATH}`,
+        slideArtDirectionPrompt,
         '',
       ]
     : [];
@@ -239,6 +384,7 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
     '',
     ...skillLines,
     ...detailedSkillLines,
+    ...slideArtDirectionLines,
     'User edit request:',
     sanitizedPrompt,
     '',

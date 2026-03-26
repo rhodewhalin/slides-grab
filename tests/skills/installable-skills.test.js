@@ -32,6 +32,7 @@ test('npm pack includes bundled skill references for installable skills', () => 
   assert.ok(filePaths.has('skills/slides-grab-design/references/design-rules.md'));
   assert.ok(filePaths.has('skills/slides-grab-design/references/detailed-design-rules.md'));
   assert.ok(filePaths.has('skills/slides-grab-design/references/design-system-full.md'));
+  assert.ok(filePaths.has('skills/slides-grab-design/references/beautiful-slide-defaults.md'));
   assert.ok(filePaths.has('skills/slides-grab-export/references/export-rules.md'));
   assert.ok(filePaths.has('skills/slides-grab-export/references/pptx-skill-reference.md'));
   assert.ok(filePaths.has('skills/slides-grab-export/references/html2pptx.md'));
@@ -48,4 +49,12 @@ test('slides-grab help no longer exposes the legacy custom skill installer', () 
   });
 
   assert.doesNotMatch(output, /\binstall-codex-skills\b/);
+});
+test('slides-grab design skill points at the bundled art-direction reference', () => {
+  const text = readFileSync('skills/slides-grab-design/SKILL.md', 'utf-8');
+
+  assert.match(text, /references\/beautiful-slide-defaults\.md/);
+  assert.match(text, /visual thesis/i);
+  assert.match(text, /content plan/i);
+  assert.match(text, /slide litmus check/i);
 });

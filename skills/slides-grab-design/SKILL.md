@@ -23,12 +23,14 @@ Generate high-quality `slide-XX.html` files in the selected slides workspace (`s
 
 ## Workflow
 1. Read approved `slide-outline.md`.
-2. Generate slide HTML files with 2-digit numbering in selected `--slides-dir`.
-3. Run `slides-grab validate --slides-dir <path>` after generation or edits.
-4. If validation fails, automatically fix the source slide HTML/CSS and re-run validation until it passes.
-5. Run `slides-grab build-viewer --slides-dir <path>` only after validation passes.
-6. Iterate on user feedback by editing only requested slide files, then re-run validation and rebuild the viewer.
-7. Keep revising until user approves conversion stage.
+2. Before generating slides, write a quick **visual thesis** (mood/material/energy), a **content plan** (opener → support/proof → detail/story → close/CTA), and the core design tokens (background, surface, text, muted, accent + display/headline/body/caption roles).
+3. Generate slide HTML files with 2-digit numbering in selected `--slides-dir`.
+4. Run `slides-grab validate --slides-dir <path>` after generation or edits.
+5. If validation fails, automatically fix the source slide HTML/CSS and re-run validation until it passes.
+6. Run `slides-grab build-viewer --slides-dir <path>` only after validation passes.
+7. Run the slide litmus check from `references/beautiful-slide-defaults.md` before presenting the deck for review.
+8. Iterate on user feedback by editing only requested slide files, then re-run validation and rebuild the viewer.
+9. Keep revising until user approves conversion stage.
 
 ## Rules
 - Keep slide size 720pt x 405pt.
@@ -37,6 +39,10 @@ Generate high-quality `slide-XX.html` files in the selected slides workspace (`s
 - Allow `data:` URLs when the slide must be fully self-contained.
 - Treat remote `https://` images as best-effort only, and never use absolute filesystem paths.
 - Prefer `<img>` for slide imagery and `data-image-placeholder` when no final asset exists.
+- Default to one job per slide, one dominant visual anchor, and copy that scans in seconds.
+- Treat opening slides and section dividers like posters, not dashboards.
+- Default to cardless layouts; only add a card when it improves structure or comprehension.
+- Use whitespace, alignment, scale, cropping, and contrast before adding decorative chrome.
 - Do not present slides for review until `slides-grab validate --slides-dir <path>` passes.
 - Do not start conversion before approval.
 - Use the packaged CLI and bundled references only; do not depend on unpublished agent-specific files.
@@ -45,4 +51,5 @@ Generate high-quality `slide-XX.html` files in the selected slides workspace (`s
 For full constraints and style system, follow:
 - `references/design-rules.md`
 - `references/detailed-design-rules.md`
+- `references/beautiful-slide-defaults.md` — slide-specific art direction defaults adapted from OpenAI's frontend design guidance
 - `references/design-system-full.md` — archived full design system, templates, and advanced pattern guidance
