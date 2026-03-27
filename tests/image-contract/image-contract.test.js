@@ -158,13 +158,18 @@ test('validate reports missing local assets and discouraged path forms', async (
   const missingReport = JSON.parse(missing.stdout);
   assert.equal(missingReport.slides[0].critical.some((issue) => issue.code === 'missing-local-asset'), true);
 
+  const remoteOnly = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', fixturePath('remote-only-asset'), '--format', 'json-full']);
+  assert.equal(remoteOnly.code, 1);
+  const remoteOnlyReport = JSON.parse(remoteOnly.stdout);
+  assert.equal(remoteOnlyReport.slides[0].critical.some((issue) => issue.code === 'remote-image-url'), true);
+
   const unsupported = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', fixturePath('unsupported-paths'), '--format', 'json-full']);
   assert.equal(unsupported.code, 1);
   const unsupportedReport = JSON.parse(unsupported.stdout);
   assert.equal(unsupportedReport.slides[0].critical.some((issue) => issue.code === 'absolute-filesystem-image-path'), true);
   assert.equal(unsupportedReport.slides[0].critical.some((issue) => issue.code === 'root-relative-image-path'), true);
   assert.equal(unsupportedReport.slides[0].warning.some((issue) => issue.code === 'noncanonical-relative-image-path'), true);
-  assert.equal(unsupportedReport.slides[0].warning.some((issue) => issue.code === 'remote-image-url'), true);
+  assert.equal(unsupportedReport.slides[0].critical.some((issue) => issue.code === 'remote-image-url'), true);
   assert.equal(unsupportedReport.slides[0].critical.some((issue) => issue.code === 'unsupported-background-image'), true);
 });
 
@@ -189,6 +194,10 @@ test('html2pdf exports the canonical ./assets fixture and blocks invalid decks i
     const blockedRootRelative = await runNodeScript('scripts/html2pdf.js', ['--slides-dir', fixturePath('unsupported-paths'), '--output', outputPath]);
     assert.equal(blockedRootRelative.code, 1);
     assert.match(blockedRootRelative.stderr, /root-relative-image-path/);
+
+    const blockedRemote = await runNodeScript('scripts/html2pdf.js', ['--slides-dir', fixturePath('remote-only-asset'), '--output', outputPath]);
+    assert.equal(blockedRemote.code, 1);
+    assert.match(blockedRemote.stderr, /remote-image-url/);
   } finally {
     await rm(workspace, { recursive: true, force: true }).catch(() => {});
   }

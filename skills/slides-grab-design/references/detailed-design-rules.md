@@ -11,7 +11,7 @@
 - Keep slide assets in `<slides-dir>/assets/`.
 - Use `tldraw`-generated assets for complex diagrams whenever possible.
 - `data:` URLs are allowed for fully self-contained slides.
-- Remote `https://` URLs are allowed but non-deterministic and fallback only.
+- Do not leave remote `http(s)://` image URLs in saved slide HTML; download source images into `<slides-dir>/assets/` and reference them as `./assets/<file>`.
 - Do not use absolute filesystem paths in slide HTML.
 - Do not use non-body `background-image` for content imagery; use `<img>` instead.
 - Use `data-image-placeholder` to reserve space when no image is available yet.

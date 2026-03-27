@@ -622,6 +622,10 @@ const EXPORT_BLOCKING_IMAGE_CONTRACT_CODES = new Set([
   'absolute-filesystem-image-path',
   'missing-local-asset',
   'missing-local-background-asset',
+  'remote-background-image-url',
+  'remote-background-image-url-insecure',
+  'remote-image-url',
+  'remote-image-url-insecure',
   'root-relative-image-path',
   'unsupported-background-image',
 ]);

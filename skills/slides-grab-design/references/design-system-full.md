@@ -461,10 +461,12 @@ Store the image at `<slides-dir>/assets/team-photo.png`.
 <img src="data:image/svg+xml;base64,..." alt="Illustration" style="width: 220pt; height: 140pt; object-fit: cover;">
 ```
 
-#### Remote URL (Best-Effort Only)
+#### Remote URL Source (Download Before Saving)
 ```html
 <img src="https://images.example.com/hero.png" alt="Hero image" style="width: 220pt; height: 140pt; object-fit: cover;">
 ```
+
+If the image source starts on the web, download it into `<slides-dir>/assets/` and change the saved slide HTML to `./assets/<file>`.
 
 #### Placeholder (Image Stand-In)
 ```html
@@ -478,7 +480,7 @@ Rules:
 - Use `./assets/<file>` as the default image contract for slide HTML.
 - Keep slide assets in `<slides-dir>/assets/`.
 - `data:` URLs are allowed for fully self-contained slides.
-- Remote `https://` URLs are allowed but non-deterministic and should be treated as fallback only.
+- Do not leave remote `http(s)://` image URLs in saved slide HTML; download source images into `<slides-dir>/assets/` and reference them as `./assets/<file>`.
 - Do not use absolute filesystem paths in slide HTML.
 - Do not use non-body `background-image` for content imagery; use `<img>` instead.
 - Use `data-image-placeholder` to reserve space when no image is available yet.
@@ -573,6 +575,6 @@ This skill is **Stage 2**. It works from the `slide-outline.md` approved by the 
 
 1. **CSS gradients**: Not supported in PowerPoint conversion — replace with background images
 2. **Webfonts**: Always include the Pretendard CDN link
-3. **Image paths**: Use `./assets/<file>` from each `slide-XX.html`; avoid absolute filesystem paths
+3. **Image paths**: Use `./assets/<file>` from each `slide-XX.html`; avoid absolute filesystem paths and do not leave remote `http(s)://` image URLs in saved slide HTML
 4. **Colors**: Always include `#` prefix in CSS
 5. **Text rules**: Never place text directly in div/span

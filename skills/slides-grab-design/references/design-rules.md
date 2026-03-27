@@ -18,8 +18,10 @@ These are the packaged design rules for installable `slides-grab` skills.
 ## Asset rules
 - Store deck-local assets in `<slides-dir>/assets/`
 - Reference deck-local assets as `./assets/<file>`
+- If an image comes from the web, download it into `<slides-dir>/assets/` before referencing it
 - Use `tldraw`-generated local assets for complex diagrams when possible
 - Allow `data:` URLs only when the slide must be fully self-contained
+- Do not leave remote `http(s)://` image URLs in saved slide HTML
 - Never use absolute filesystem paths
 
 ## Package-published theme references

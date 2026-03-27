@@ -38,7 +38,7 @@ Generate high-quality `slide-XX.html` files in the selected slides workspace (`s
 - Keep semantic text tags (`p`, `h1-h6`, `ul`, `ol`, `li`).
 - Put local images under `<slides-dir>/assets/` and reference them as `./assets/<file>`.
 - Allow `data:` URLs when the slide must be fully self-contained.
-- Treat remote `https://` images as best-effort only, and never use absolute filesystem paths.
+- Do not leave remote `http(s)://` image URLs in saved slide HTML; download source images into `<slides-dir>/assets/` and reference them as `./assets/<file>`.
 - Prefer `<img>` for slide imagery and `data-image-placeholder` when no final asset exists.
 - Default to one job per slide, one dominant visual anchor, and copy that scans in seconds.
 - Treat opening slides and section dividers like posters, not dashboards.
