@@ -26,10 +26,12 @@ Use **design-skill** (`.claude/skills/design-skill/SKILL.md`).
 3. Run validation: `slides-grab validate --slides-dir <path>`
 4. If validation fails, automatically fix the slide HTML/CSS until validation passes.
 5. Build the viewer: `node scripts/build-viewer.js --slides-dir <path>`
-6. For complex diagrams (architecture, workflows, relationship maps, multi-node concepts), prefer `tldraw`. Render a local diagram asset with `slides-grab tldraw`, store it under `<slides-dir>/assets/`, and place it into the slide with a normal `<img>`.
-7. Present viewer to user for review.
-8. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
-9. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
+6. When a slide calls for bespoke imagery, prefer `slides-grab image --prompt "<prompt>" --slides-dir <path>` so Nano Banana Pro saves a local asset under `<slides-dir>/assets/`.
+7. For complex diagrams (architecture, workflows, relationship maps, multi-node concepts), prefer `tldraw`. Render a local diagram asset with `slides-grab tldraw`, store it under `<slides-dir>/assets/`, and place it into the slide with a normal `<img>`.
+8. If `GOOGLE_API_KEY` or `GEMINI_API_KEY` is unavailable, ask the user for a Google API key or fall back to web search + download into `<slides-dir>/assets/`.
+9. Present viewer to user for review.
+10. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
+11. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
 
 **Do not proceed to Stage 3 without approval.**
 
@@ -52,3 +54,4 @@ Use **pptx-skill** (`.claude/skills/pptx-skill/SKILL.md`).
 4. **Use `decks/<deck-name>/`** as the slides workspace for multi-deck projects.
 5. **Call out export risk clearly**: PPTX and Figma export are experimental / unstable and should be described as best-effort output.
 6. **Prefer tldraw for complex diagrams**: Use `slides-grab tldraw` for diagram-heavy slides unless the user explicitly wants another rendering path.
+7. **Prefer Nano Banana Pro for bespoke imagery**: Use `slides-grab image` when a slide benefits from generated imagery, and keep the result as a local asset under `<slides-dir>/assets/`.

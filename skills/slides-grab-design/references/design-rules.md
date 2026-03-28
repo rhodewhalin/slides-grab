@@ -18,7 +18,9 @@ These are the packaged design rules for installable `slides-grab` skills.
 ## Asset rules
 - Store deck-local assets in `<slides-dir>/assets/`
 - Reference deck-local assets as `./assets/<file>`
+- Use `slides-grab image --prompt "<prompt>" --slides-dir <path>` with Nano Banana Pro for bespoke generated images when helpful
 - If an image comes from the web, download it into `<slides-dir>/assets/` before referencing it
+- If `GOOGLE_API_KEY` / `GEMINI_API_KEY` is unavailable, ask the user for a Google API key or fall back to web search + download
 - Use `tldraw`-generated local assets for complex diagrams when possible
 - Allow `data:` URLs only when the slide must be fully self-contained
 - Do not leave remote `http(s)://` image URLs in saved slide HTML
@@ -49,6 +51,7 @@ These are the packaged design rules for installable `slides-grab` skills.
 
 ## Review loop
 - Generate or edit only the needed slide files.
+- Prefer `slides-grab image` before remote image sourcing when the slide needs bespoke imagery.
 - Prefer `tldraw` for complex diagrams instead of hand-building dense diagram geometry in HTML/CSS.
 - Re-run validation after every generation/edit pass.
 - Rebuild the viewer only after validation passes.

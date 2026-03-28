@@ -38,7 +38,9 @@ test('npm pack includes bundled skill references for installable skills', () => 
   assert.ok(filePaths.has('skills/slides-grab-export/references/html2pptx.md'));
   assert.ok(filePaths.has('skills/slides-grab-export/references/ooxml.md'));
   assert.ok(filePaths.has('skills/slides-grab/references/presentation-workflow-reference.md'));
+  assert.ok(filePaths.has('scripts/generate-image.js'));
   assert.ok(filePaths.has('src/pptx-raster-export.cjs'));
+  assert.ok(filePaths.has('src/nano-banana.js'));
   assert.ok(!filePaths.has('scripts/install-codex-skills.js'));
 });
 
@@ -57,4 +59,7 @@ test('slides-grab design skill points at the bundled art-direction reference', (
   assert.match(text, /visual thesis/i);
   assert.match(text, /content plan/i);
   assert.match(text, /slide litmus check/i);
+  assert.match(text, /slides-grab image/i);
+  assert.match(text, /Nano Banana Pro/i);
+  assert.match(text, /GOOGLE_API_KEY|GEMINI_API_KEY/);
 });
