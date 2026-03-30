@@ -21,6 +21,7 @@ const ASSET_CONTRACT_RULES = {
     remoteInsecureCode: 'remote-video-url-insecure',
     absoluteCode: 'absolute-filesystem-video-path',
     rootRelativeCode: 'root-relative-video-path',
+    otherSchemeCode: 'unsupported-video-url-scheme',
     noncanonicalCode: 'noncanonical-relative-video-path',
   },
 };
@@ -129,6 +130,17 @@ function buildAssetContractReport({ slideFile, sources = [], assetType = 'image'
       continue;
     }
 
+    if (classification.kind === 'other-scheme' && rules.otherSchemeCode) {
+      issues.push({
+        severity: 'critical',
+        code: rules.otherSchemeCode,
+        message: `Non-file URL schemes for ${label} assets are unsupported in saved slide HTML. Download the ${label} into ./assets/<file> instead.`,
+        slide: slideFile,
+        ...entry,
+      });
+      continue;
+    }
+
     if (classification.kind === 'noncanonical-relative-path') {
       issues.push({
         severity: 'warning',
@@ -163,6 +175,7 @@ export function buildSlideRuntimeHtml(html, { baseHref, slideFile }) {
   const slideFile = ${JSON.stringify(slideFile)};
   const localAssetPrefix = ${JSON.stringify(LOCAL_ASSET_PREFIX)};
   const absolutePathRe = ${ABSOLUTE_FILESYSTEM_PATH_RE.toString()};
+  const schemeRe = ${SCHEME_RE.toString()};
   const prefix = '[slides-grab:image]';
 
   function describeElement(element) {
@@ -213,6 +226,10 @@ export function buildSlideRuntimeHtml(html, { baseHref, slideFile }) {
     }
     if (absolutePathRe.test(value) || value.startsWith('/')) {
       fail('non-portable ' + kind + ' path is unsupported', { src: value });
+      return false;
+    }
+    if (schemeRe.test(value)) {
+      fail('unsupported ' + kind + ' URL scheme in saved slides; download it into ./assets/<file>', { src: value });
       return false;
     }
     if (!value.startsWith(localAssetPrefix)) {

@@ -321,6 +321,87 @@ async function writeAutoplayVideoPosterDeck(workspace) {
   return slidesDir;
 }
 
+async function writeClippedVideoPosterDeck(workspace) {
+  const slidesDir = join(workspace, 'slides');
+  const assetsDir = join(slidesDir, 'assets');
+  await mkdir(assetsDir, { recursive: true });
+
+  await runFfmpeg([
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    'color=c=red:s=160x90:d=1',
+    '-pix_fmt',
+    'yuv420p',
+    join(assetsDir, 'clipped.mp4'),
+  ]);
+
+  await sharp({
+    create: {
+      width: 160,
+      height: 90,
+      channels: 3,
+      background: { r: 0, g: 0, b: 255 },
+    },
+  })
+    .png()
+    .toFile(join(assetsDir, 'clipped-poster.png'));
+
+  const slideHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      width: 960px;
+      height: 540px;
+      overflow: hidden;
+      position: relative;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+    .frame {
+      position: absolute;
+      top: 160px;
+      left: 220px;
+      width: 200px;
+      height: 100px;
+      overflow: hidden;
+      background: #ffffff;
+      border: 2px solid #111111;
+    }
+    video {
+      position: absolute;
+      top: 0;
+      left: -80px;
+      width: 320px;
+      height: 100px;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      background: #000000;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <video
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="./assets/clipped-poster.png"
+      src="./assets/clipped.mp4"
+    ></video>
+  </div>
+</body>
+</html>`;
+
+  await writeFile(join(slidesDir, 'slide-01.html'), slideHtml, 'utf8');
+  return slidesDir;
+}
+
 function getPageSize(page) {
   const { width, height } = page.getSize();
   return {
@@ -627,6 +708,62 @@ test('print mode uses a video poster thumbnail instead of the live autoplay fram
 
     const centerPixel = await readRelativePixel(pngPath, 0.5, 0.5);
     assertPixelApproximately(centerPixel.pixel, [0, 0, 255], 12);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('capture mode keeps video poster thumbnails clipped by ancestor overflow', { concurrency: false, timeout: 120000 }, async (t) => {
+  if (!canEncodeVideoFixtures()) {
+    t.skip('ffmpeg is required for video fixture generation');
+  }
+
+  const workspace = await mkdtemp(join(os.tmpdir(), 'html2pdf-e2e-video-clip-capture-'));
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage({
+    viewport: { width: 960, height: 540 },
+  });
+
+  try {
+    const slidesDir = await writeClippedVideoPosterDeck(workspace);
+    const result = await renderSlideToPdf(page, 'slide-01.html', slidesDir, { mode: 'capture' });
+    const outsidePixel = await sharp(result.pngBytes)
+      .extract({ left: 195, top: 210, width: 1, height: 1 })
+      .raw()
+      .toBuffer();
+    const insidePixel = await sharp(result.pngBytes)
+      .extract({ left: 240, top: 210, width: 1, height: 1 })
+      .raw()
+      .toBuffer();
+
+    assertPixelApproximately(Array.from(outsidePixel), [255, 255, 255], 12);
+    assertPixelApproximately(Array.from(insidePixel), [0, 0, 255], 12);
+  } finally {
+    await browser.close();
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('print mode keeps video poster thumbnails clipped by ancestor overflow', { concurrency: false, timeout: 120000 }, async (t) => {
+  if (!canEncodeVideoFixtures() || !canRasterizePdfPages()) {
+    t.skip('ffmpeg and pdftoppm are required for rendered video clipping verification');
+  }
+
+  const workspace = await mkdtemp(join(os.tmpdir(), 'html2pdf-e2e-video-clip-print-'));
+
+  try {
+    await writeClippedVideoPosterDeck(workspace);
+    const outputPath = join(workspace, 'video-clipped.pdf');
+    const rasterPrefix = join(workspace, 'video-clipped-page-1');
+
+    await runPdfExport(['--slides-dir', 'slides', '--mode', 'print', '--output', outputPath], workspace);
+    const pngPath = await rasterizePdfPage(outputPath, rasterPrefix, 1);
+
+    const outsidePixel = await readRelativePixel(pngPath, 195 / 960, 210 / 540);
+    const insidePixel = await readRelativePixel(pngPath, 240 / 960, 210 / 540);
+
+    assertPixelApproximately(outsidePixel.pixel, [255, 255, 255], 12);
+    assertPixelApproximately(insidePixel.pixel, [0, 0, 255], 12);
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }

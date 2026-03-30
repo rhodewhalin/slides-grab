@@ -733,6 +733,7 @@ const EXPORT_BLOCKING_IMAGE_CONTRACT_CODES = new Set([
   'remote-video-url-insecure',
   'root-relative-image-path',
   'root-relative-video-path',
+  'unsupported-video-url-scheme',
   'unsupported-background-image',
 ]);
 

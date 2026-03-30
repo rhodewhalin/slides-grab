@@ -204,6 +204,7 @@ test('image contract helpers classify supported and discouraged sources', () => 
   assert.deepEqual(classifyImageSource('../shared/logo.png'), { kind: 'noncanonical-relative-path' });
   assert.deepEqual(classifyImageSource('/Users/demo/Desktop/photo.png'), { kind: 'absolute-filesystem-path' });
   assert.deepEqual(classifyImageSource('/assets/example.svg'), { kind: 'root-relative-path' });
+  assert.deepEqual(classifyImageSource('blob:https://example.com/demo'), { kind: 'other-scheme' });
 });
 
 test('buildSlideRuntimeHtml injects base href and runtime diagnostics', () => {
@@ -328,9 +329,21 @@ test('validate and html2pdf block unsupported video asset paths', async (t) => {
     const mixedReport = JSON.parse(mixed.stdout);
     assert.equal(mixedReport.slides[0].critical.some((issue) => issue.code === 'remote-video-url'), true);
 
+    const blobSlidesDir = await createVideoFixtureDeck(path.join(workspace, 'blob'), {
+      videoSrc: 'blob:https://example.com/demo',
+    });
+    const blob = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', blobSlidesDir, '--format', 'json-full']);
+    assert.equal(blob.code, 1);
+    const blobReport = JSON.parse(blob.stdout);
+    assert.equal(blobReport.slides[0].critical.some((issue) => issue.code === 'unsupported-video-url-scheme'), true);
+
     const blocked = await runNodeScript('scripts/html2pdf.js', ['--slides-dir', remoteSlidesDir, '--output', path.join(workspace, 'blocked.pdf')]);
     assert.equal(blocked.code, 1);
     assert.match(blocked.stderr, /remote-video-url/);
+
+    const blockedBlob = await runNodeScript('scripts/html2pdf.js', ['--slides-dir', blobSlidesDir, '--output', path.join(workspace, 'blocked-blob.pdf')]);
+    assert.equal(blockedBlob.code, 1);
+    assert.match(blockedBlob.stderr, /unsupported-video-url-scheme/);
   } finally {
     await rm(workspace, { recursive: true, force: true }).catch(() => {});
   }

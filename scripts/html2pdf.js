@@ -407,16 +407,6 @@ export async function prepareVideosForExport(page, options = {}) {
       return;
     }
 
-    document.querySelector('[data-slides-grab-video-overlay-root="true"]')?.remove();
-
-    const overlayRoot = document.createElement('div');
-    overlayRoot.setAttribute('data-slides-grab-video-overlay-root', 'true');
-    overlayRoot.style.position = 'fixed';
-    overlayRoot.style.inset = '0';
-    overlayRoot.style.pointerEvents = 'none';
-    overlayRoot.style.zIndex = '2147483647';
-    document.documentElement.append(overlayRoot);
-
     function waitForVideoReady(video) {
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         return Promise.resolve();
@@ -462,7 +452,19 @@ export async function prepareVideosForExport(page, options = {}) {
       }
     }
 
-    const overlayImages = [];
+    function copyComputedStyle(sourceElement, targetElement) {
+      const computed = window.getComputedStyle(sourceElement);
+      for (const propertyName of Array.from(computed)) {
+        targetElement.style.setProperty(
+          propertyName,
+          computed.getPropertyValue(propertyName),
+          computed.getPropertyPriority(propertyName),
+        );
+      }
+      return computed;
+    }
+
+    const replacementImages = [];
 
     for (const video of videos) {
       const rect = video.getBoundingClientRect();
@@ -470,43 +472,32 @@ export async function prepareVideosForExport(page, options = {}) {
         continue;
       }
 
-      const computed = window.getComputedStyle(video);
       const thumbnail = (video.getAttribute('poster') || '').trim() || await captureVideoFrame(video);
       if (!thumbnail) {
         continue;
       }
 
-      const overlay = document.createElement('img');
-      overlay.setAttribute('data-slides-grab-video-overlay', 'true');
-      overlay.src = thumbnail;
-      overlay.alt = video.getAttribute('aria-label') || video.getAttribute('title') || 'Video thumbnail';
-      overlay.style.position = 'fixed';
-      overlay.style.left = `${rect.left}px`;
-      overlay.style.top = `${rect.top}px`;
-      overlay.style.width = `${rect.width}px`;
-      overlay.style.height = `${rect.height}px`;
-      overlay.style.objectFit = computed.objectFit || 'contain';
-      overlay.style.objectPosition = computed.objectPosition || '50% 50%';
-      overlay.style.borderRadius = computed.borderRadius;
-      overlay.style.boxShadow = computed.boxShadow;
-      overlay.style.opacity = computed.opacity;
-      overlay.style.filter = computed.filter;
-      overlay.style.clipPath = computed.clipPath;
-      overlay.style.mixBlendMode = computed.mixBlendMode;
-      overlay.style.background = computed.background;
-      overlay.style.pointerEvents = 'none';
-      overlay.style.zIndex = computed.zIndex !== 'auto' ? computed.zIndex : '2147483647';
-
-      overlayRoot.append(overlay);
-      overlayImages.push(overlay);
       video.pause?.();
-      video.style.visibility = 'hidden';
+      const replacement = document.createElement('img');
+      replacement.setAttribute('data-slides-grab-video-replacement', 'true');
+      replacement.src = thumbnail;
+      replacement.alt = video.getAttribute('aria-label') || video.getAttribute('title') || 'Video thumbnail';
+      replacement.className = video.className;
+
+      const computed = copyComputedStyle(video, replacement);
+      replacement.style.objectFit = computed.objectFit || 'contain';
+      replacement.style.objectPosition = computed.objectPosition || '50% 50%';
+      replacement.style.pointerEvents = 'none';
+      replacement.style.visibility = 'visible';
+
+      video.replaceWith(replacement);
+      replacementImages.push(replacement);
     }
 
     await Promise.all(
-      overlayImages.map(async (overlay) => {
-        if (typeof overlay.decode === 'function') {
-          await overlay.decode().catch(() => {});
+      replacementImages.map(async (replacement) => {
+        if (typeof replacement.decode === 'function') {
+          await replacement.decode().catch(() => {});
         }
       }),
     );
