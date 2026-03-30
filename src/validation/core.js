@@ -236,11 +236,10 @@ async function inspectVideoContract(slidesDir, fileName, inspection) {
   const slidePath = join(slidesDir, fileName);
 
   for (const video of inspection.videos) {
-    const sources = video.sources.length > 0
-      ? video.sources
-      : video.src
-        ? [video.src]
-        : [];
+    const sources = [...new Set([
+      typeof video.src === 'string' ? video.src : '',
+      ...video.sources,
+    ].map((source) => source.trim()).filter(Boolean))];
 
     const issues = buildVideoContractReport({
       slideFile: fileName,

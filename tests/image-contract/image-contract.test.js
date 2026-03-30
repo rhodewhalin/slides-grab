@@ -82,6 +82,7 @@ async function createVideoFixtureDeck(workspace, {
   videoSrc = './assets/example.mp4',
   posterSrc = './assets/poster.svg',
   createVideoAsset = true,
+  sourceTags = [],
 } = {}) {
   const slidesDir = path.join(workspace, 'slides');
   const assetsDir = path.join(slidesDir, 'assets');
@@ -110,6 +111,10 @@ async function createVideoFixtureDeck(workspace, {
     'utf8',
   );
 
+  const sourceHtml = sourceTags
+    .map((source) => `    <source src="${source}" type="video/mp4">`)
+    .join('\n');
+
   await writeFile(
     path.join(slidesDir, 'slide-01.html'),
     `<!DOCTYPE html>
@@ -135,7 +140,9 @@ async function createVideoFixtureDeck(workspace, {
   </style>
 </head>
 <body>
-  <video controls poster="${posterSrc}" src="${videoSrc}"></video>
+  <video controls poster="${posterSrc}" src="${videoSrc}">
+${sourceHtml}
+  </video>
 </body>
 </html>`,
     'utf8',
@@ -311,6 +318,15 @@ test('validate and html2pdf block unsupported video asset paths', async (t) => {
     assert.equal(remote.code, 1);
     const remoteReport = JSON.parse(remote.stdout);
     assert.equal(remoteReport.slides[0].critical.some((issue) => issue.code === 'remote-video-url'), true);
+
+    const mixedSlidesDir = await createVideoFixtureDeck(path.join(workspace, 'mixed-src-source'), {
+      videoSrc: 'https://example.com/direct.mp4',
+      sourceTags: ['./assets/example.mp4'],
+    });
+    const mixed = await runNodeScript('scripts/validate-slides.js', ['--slides-dir', mixedSlidesDir, '--format', 'json-full']);
+    assert.equal(mixed.code, 1);
+    const mixedReport = JSON.parse(mixed.stdout);
+    assert.equal(mixedReport.slides[0].critical.some((issue) => issue.code === 'remote-video-url'), true);
 
     const blocked = await runNodeScript('scripts/html2pdf.js', ['--slides-dir', remoteSlidesDir, '--output', path.join(workspace, 'blocked.pdf')]);
     assert.equal(blocked.code, 1);
