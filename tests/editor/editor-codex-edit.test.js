@@ -95,6 +95,8 @@ test('buildCodexEditPrompt includes user prompt, bbox, and XPath targets', () =>
   assert.match(prompt, /Do not modify any other slide HTML files unless explicitly requested\./);
   assert.match(prompt, /You may add or update supporting files required for the requested slide/i);
   assert.match(prompt, /store it under <slides-dir>\/assets\/ and reference it from the requested slide as \.\/assets\/<file>/i);
+  assert.match(prompt, /local images and videos/i);
+  assert.match(prompt, /slides-grab fetch-video --url <youtube-url> --slides-dir <path>|yt-dlp/i);
   assert.match(prompt, /Do not modify unrelated assets, shared resources, or generated files that are not required for the requested slide\./);
   assert.match(prompt, /Do not persist runtime-only editor\/viewer injections/);
 });
@@ -153,6 +155,8 @@ test('getPptDesignSkillPrompt loads bundled ppt design skill guidance', () => {
   assert.match(skillPrompt, /# slides-grab Design Skill \(Codex\)/);
   assert.match(skillPrompt, /Keep slide size 720pt x 405pt\./);
   assert.match(skillPrompt, /reference them as `\.\/assets\/<file>`\./);
+  assert.match(skillPrompt, /local videos/i);
+  assert.match(skillPrompt, /fetch-video|yt-dlp/i);
 });
 
 test('getDetailedDesignSkillPrompt loads only relevant detailed design sections', () => {
@@ -168,6 +172,8 @@ test('getDetailedDesignSkillPrompt loads only relevant detailed design sections'
   assert.match(detailedPrompt, /content plan/i);
   assert.match(detailedPrompt, /Treat the opening slide like a poster/i);
   assert.match(detailedPrompt, /Would this still feel premium without shadows, cards, or extra chrome\?/i);
+  assert.match(detailedPrompt, /local videos/i);
+  assert.match(detailedPrompt, /fetch-video|yt-dlp/i);
   assert.doesNotMatch(detailedPrompt, /## Core Design Philosophy/);
   assert.doesNotMatch(detailedPrompt, /### 1\. Chart\.js/);
 });

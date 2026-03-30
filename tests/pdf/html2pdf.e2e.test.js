@@ -65,6 +65,35 @@ function canRasterizePdfPages() {
   return probe.status === 0 || probe.status === 1;
 }
 
+function canEncodeVideoFixtures() {
+  const probe = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
+  if (probe.error?.code === 'ENOENT') {
+    return false;
+  }
+  return probe.status === 0;
+}
+
+function runFfmpeg(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('ffmpeg', args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stderr = '';
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(new Error(`ffmpeg failed (${code})\n${stderr}`));
+    });
+  });
+}
+
 function extractPdfText(pdfPath) {
   return new Promise((resolve, reject) => {
     const child = spawn('pdftotext', [pdfPath, '-'], {
@@ -224,6 +253,71 @@ async function copySameFrameSiblingsFixture(workspace) {
 async function copyTransformedFrameFixture(workspace) {
   const slidesDir = join(workspace, 'slides');
   await cp(TRANSFORMED_FRAME_FIXTURE_DIR, slidesDir, { recursive: true });
+  return slidesDir;
+}
+
+async function writeAutoplayVideoPosterDeck(workspace) {
+  const slidesDir = join(workspace, 'slides');
+  const assetsDir = join(slidesDir, 'assets');
+  await mkdir(assetsDir, { recursive: true });
+
+  await runFfmpeg([
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    'color=c=red:s=160x90:d=1',
+    '-pix_fmt',
+    'yuv420p',
+    join(assetsDir, 'hero.mp4'),
+  ]);
+
+  await sharp({
+    create: {
+      width: 160,
+      height: 90,
+      channels: 3,
+      background: { r: 0, g: 0, b: 255 },
+    },
+  })
+    .png()
+    .toFile(join(assetsDir, 'hero-poster.png'));
+
+  const slideHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #101820; }
+    body {
+      width: 960px;
+      height: 540px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    video {
+      width: 480px;
+      height: 270px;
+      display: block;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    poster="./assets/hero-poster.png"
+    src="./assets/hero.mp4"
+  ></video>
+</body>
+</html>`;
+
+  await writeFile(join(slidesDir, 'slide-01.html'), slideHtml, 'utf8');
   return slidesDir;
 }
 
@@ -485,6 +579,54 @@ test('print mode preserves JS-painted direct-child canvas frames', { concurrency
 
     assertPixelApproximately(leftSample.pixel, [230, 80, 0], 12);
     assertPixelApproximately(rightSample.pixel, [0, 71, 255], 12);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('capture mode uses a video poster thumbnail instead of the live autoplay frame', { concurrency: false, timeout: 120000 }, async (t) => {
+  if (!canEncodeVideoFixtures()) {
+    t.skip('ffmpeg is required for video fixture generation');
+  }
+
+  const workspace = await mkdtemp(join(os.tmpdir(), 'html2pdf-e2e-video-capture-'));
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage({
+    viewport: { width: 960, height: 540 },
+  });
+
+  try {
+    const slidesDir = await writeAutoplayVideoPosterDeck(workspace);
+    const result = await renderSlideToPdf(page, 'slide-01.html', slidesDir, { mode: 'capture' });
+    const centerPixel = await sharp(result.pngBytes)
+      .extract({ left: Math.floor(result.width / 2), top: Math.floor(result.height / 2), width: 1, height: 1 })
+      .raw()
+      .toBuffer();
+
+    assertPixelApproximately(Array.from(centerPixel), [0, 0, 255], 12);
+  } finally {
+    await browser.close();
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('print mode uses a video poster thumbnail instead of the live autoplay frame', { concurrency: false, timeout: 120000 }, async (t) => {
+  if (!canEncodeVideoFixtures() || !canRasterizePdfPages()) {
+    t.skip('ffmpeg and pdftoppm are required for rendered video-poster verification');
+  }
+
+  const workspace = await mkdtemp(join(os.tmpdir(), 'html2pdf-e2e-video-print-'));
+
+  try {
+    await writeAutoplayVideoPosterDeck(workspace);
+    const outputPath = join(workspace, 'video-poster.pdf');
+    const rasterPrefix = join(workspace, 'video-poster-page-1');
+
+    await runPdfExport(['--slides-dir', 'slides', '--mode', 'print', '--output', outputPath], workspace);
+    const pngPath = await rasterizePdfPage(outputPath, rasterPrefix, 1);
+
+    const centerPixel = await readRelativePixel(pngPath, 0.5, 0.5);
+    assertPixelApproximately(centerPixel.pixel, [0, 0, 255], 12);
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }

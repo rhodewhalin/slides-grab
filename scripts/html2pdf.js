@@ -29,6 +29,7 @@ const TARGET_ASPECT_RATIO = 16 / 9;
 const RENDER_SETTLE_MS = 120;
 const CSS_PIXELS_PER_INCH = 96;
 const PDF_POINTS_PER_INCH = 72;
+const VIDEO_EXPORT_PREP_TIMEOUT_MS = 4000;
 
 function printUsage() {
   process.stdout.write(
@@ -397,6 +398,123 @@ export async function detectSlideFrame(page) {
   };
 }
 
+export async function prepareVideosForExport(page, options = {}) {
+  const timeoutMs = normalizeDimension(options.timeoutMs ?? VIDEO_EXPORT_PREP_TIMEOUT_MS, VIDEO_EXPORT_PREP_TIMEOUT_MS);
+
+  await page.evaluate(async ({ timeoutMs: captureTimeoutMs }) => {
+    const videos = Array.from(document.querySelectorAll('video'));
+    if (videos.length === 0) {
+      return;
+    }
+
+    document.querySelector('[data-slides-grab-video-overlay-root="true"]')?.remove();
+
+    const overlayRoot = document.createElement('div');
+    overlayRoot.setAttribute('data-slides-grab-video-overlay-root', 'true');
+    overlayRoot.style.position = 'fixed';
+    overlayRoot.style.inset = '0';
+    overlayRoot.style.pointerEvents = 'none';
+    overlayRoot.style.zIndex = '2147483647';
+    document.documentElement.append(overlayRoot);
+
+    function waitForVideoReady(video) {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve) => {
+        const cleanup = () => {
+          video.removeEventListener('loadeddata', onReady);
+          video.removeEventListener('canplay', onReady);
+          video.removeEventListener('error', onReady);
+        };
+        const onReady = () => {
+          cleanup();
+          resolve();
+        };
+
+        video.addEventListener('loadeddata', onReady, { once: true });
+        video.addEventListener('canplay', onReady, { once: true });
+        video.addEventListener('error', onReady, { once: true });
+        setTimeout(onReady, captureTimeoutMs);
+      });
+    }
+
+    async function captureVideoFrame(video) {
+      await waitForVideoReady(video);
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth <= 0 || video.videoHeight <= 0) {
+        return '';
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return '';
+      }
+
+      try {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/png');
+      } catch {
+        return '';
+      }
+    }
+
+    const overlayImages = [];
+
+    for (const video of videos) {
+      const rect = video.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        continue;
+      }
+
+      const computed = window.getComputedStyle(video);
+      const thumbnail = (video.getAttribute('poster') || '').trim() || await captureVideoFrame(video);
+      if (!thumbnail) {
+        continue;
+      }
+
+      const overlay = document.createElement('img');
+      overlay.setAttribute('data-slides-grab-video-overlay', 'true');
+      overlay.src = thumbnail;
+      overlay.alt = video.getAttribute('aria-label') || video.getAttribute('title') || 'Video thumbnail';
+      overlay.style.position = 'fixed';
+      overlay.style.left = `${rect.left}px`;
+      overlay.style.top = `${rect.top}px`;
+      overlay.style.width = `${rect.width}px`;
+      overlay.style.height = `${rect.height}px`;
+      overlay.style.objectFit = computed.objectFit || 'contain';
+      overlay.style.objectPosition = computed.objectPosition || '50% 50%';
+      overlay.style.borderRadius = computed.borderRadius;
+      overlay.style.boxShadow = computed.boxShadow;
+      overlay.style.opacity = computed.opacity;
+      overlay.style.filter = computed.filter;
+      overlay.style.clipPath = computed.clipPath;
+      overlay.style.mixBlendMode = computed.mixBlendMode;
+      overlay.style.background = computed.background;
+      overlay.style.pointerEvents = 'none';
+      overlay.style.zIndex = computed.zIndex !== 'auto' ? computed.zIndex : '2147483647';
+
+      overlayRoot.append(overlay);
+      overlayImages.push(overlay);
+      video.pause?.();
+      video.style.visibility = 'hidden';
+    }
+
+    await Promise.all(
+      overlayImages.map(async (overlay) => {
+        if (typeof overlay.decode === 'function') {
+          await overlay.decode().catch(() => {});
+        }
+      }),
+    );
+
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }, { timeoutMs });
+}
+
 export async function normalizeBodyToSlideFrame(page, slideFrame) {
   return page.evaluate(({ width, height }) => {
     const body = document.body;
@@ -538,6 +656,7 @@ export async function renderSlideToPdf(page, slideFile, slidesDir, options = {})
     };
     await page.setViewportSize(viewportSize);
     await waitForSlideRenderReady(page, { ...options, runReadySignal: false });
+    await prepareVideosForExport(page);
     const pngBytes = await page.screenshot({
       type: 'png',
       clip: {
@@ -555,6 +674,8 @@ export async function renderSlideToPdf(page, slideFile, slidesDir, options = {})
       pngBytes: normalizedPngBytes,
     };
   }
+
+  await prepareVideosForExport(page);
 
   return {
     mode,

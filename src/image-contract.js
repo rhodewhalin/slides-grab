@@ -6,6 +6,25 @@ const CSS_URL_RE = /url\(\s*(['"]?)(.*?)\1\s*\)/gi;
 
 export const LOCAL_ASSET_PREFIX = './assets/';
 
+const ASSET_CONTRACT_RULES = {
+  image: {
+    label: 'image',
+    remoteCode: 'remote-image-url',
+    remoteInsecureCode: 'remote-image-url-insecure',
+    absoluteCode: 'absolute-filesystem-image-path',
+    rootRelativeCode: 'root-relative-image-path',
+    noncanonicalCode: 'noncanonical-relative-image-path',
+  },
+  video: {
+    label: 'video',
+    remoteCode: 'remote-video-url',
+    remoteInsecureCode: 'remote-video-url-insecure',
+    absoluteCode: 'absolute-filesystem-video-path',
+    rootRelativeCode: 'root-relative-video-path',
+    noncanonicalCode: 'noncanonical-relative-video-path',
+  },
+};
+
 export function looksLikeAbsoluteFilesystemPath(value) {
   return ABSOLUTE_FILESYSTEM_PATH_RE.test((value || '').trim());
 }
@@ -53,7 +72,9 @@ function injectIntoHead(html, snippet) {
   return `${snippet}\n${html}`;
 }
 
-export function buildImageContractReport({ slideFile, sources = [] }) {
+function buildAssetContractReport({ slideFile, sources = [], assetType = 'image' }) {
+  const rules = ASSET_CONTRACT_RULES[assetType] || ASSET_CONTRACT_RULES.image;
+  const { label } = rules;
   const issues = [];
 
   for (const entry of sources) {
@@ -67,8 +88,8 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
     if (classification.kind === 'remote-url') {
       issues.push({
         severity: 'critical',
-        code: 'remote-image-url',
-        message: 'Remote image URLs are unsupported in saved slide HTML. Download the image into ./assets/<file> instead.',
+        code: rules.remoteCode,
+        message: `Remote ${label} URLs are unsupported in saved slide HTML. Download the ${label} into ./assets/<file> instead.`,
         slide: slideFile,
         ...entry,
       });
@@ -78,8 +99,8 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
     if (classification.kind === 'remote-url-insecure') {
       issues.push({
         severity: 'critical',
-        code: 'remote-image-url-insecure',
-        message: 'Remote http:// image URLs are unsupported in saved slide HTML. Download the image into ./assets/<file> instead.',
+        code: rules.remoteInsecureCode,
+        message: `Remote http:// ${label} URLs are unsupported in saved slide HTML. Download the ${label} into ./assets/<file> instead.`,
         slide: slideFile,
         ...entry,
       });
@@ -89,8 +110,8 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
     if (classification.kind === 'absolute-filesystem-path') {
       issues.push({
         severity: 'critical',
-        code: 'absolute-filesystem-image-path',
-        message: 'Absolute filesystem paths are unsupported. Use ./assets/<file> instead.',
+        code: rules.absoluteCode,
+        message: `Absolute filesystem ${label} paths are unsupported. Use ./assets/<file> instead.`,
         slide: slideFile,
         ...entry,
       });
@@ -100,8 +121,8 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
     if (classification.kind === 'root-relative-path') {
       issues.push({
         severity: 'critical',
-        code: 'root-relative-image-path',
-        message: 'Root-relative image paths are unsupported. Use ./assets/<file> instead.',
+        code: rules.rootRelativeCode,
+        message: `Root-relative ${label} paths are unsupported. Use ./assets/<file> instead.`,
         slide: slideFile,
         ...entry,
       });
@@ -111,8 +132,8 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
     if (classification.kind === 'noncanonical-relative-path') {
       issues.push({
         severity: 'warning',
-        code: 'noncanonical-relative-image-path',
-        message: 'Use ./assets/<file> for portable local assets.',
+        code: rules.noncanonicalCode,
+        message: `Use ./assets/<file> for portable local ${label} assets.`,
         slide: slideFile,
         ...entry,
       });
@@ -120,6 +141,14 @@ export function buildImageContractReport({ slideFile, sources = [] }) {
   }
 
   return issues;
+}
+
+export function buildImageContractReport({ slideFile, sources = [] }) {
+  return buildAssetContractReport({ slideFile, sources, assetType: 'image' });
+}
+
+export function buildVideoContractReport({ slideFile, sources = [] }) {
+  return buildAssetContractReport({ slideFile, sources, assetType: 'video' });
 }
 
 export function buildSlideRuntimeHtml(html, { baseHref, slideFile }) {
@@ -166,36 +195,96 @@ export function buildSlideRuntimeHtml(html, { baseHref, slideFile }) {
     console.error(prefix + ' ' + slideFile + ': ' + message, detail);
   }
 
+  function validateAssetSource(kind, source, { allowEmpty = true, onNoncanonical = 'warn' } = {}) {
+    const value = (source || '').trim();
+    if (!value) {
+      return allowEmpty;
+    }
+    if (value.startsWith('data:')) {
+      return true;
+    }
+    if (value.startsWith('https://')) {
+      fail('remote ' + kind + ' URL is unsupported in saved slides; download it into ./assets/<file>', { src: value });
+      return false;
+    }
+    if (value.startsWith('http://')) {
+      fail('remote http:// ' + kind + ' URL is unsupported in saved slides; download it into ./assets/<file>', { src: value });
+      return false;
+    }
+    if (absolutePathRe.test(value) || value.startsWith('/')) {
+      fail('non-portable ' + kind + ' path is unsupported', { src: value });
+      return false;
+    }
+    if (!value.startsWith(localAssetPrefix)) {
+      const report = onNoncanonical === 'fail' ? fail : warn;
+      report('noncanonical local ' + kind + ' path should use ./assets/<file>', { src: value });
+    }
+    return true;
+  }
+
+  function getVideoSources(video) {
+    const sources = [];
+    const directSrc = (video.getAttribute('src') || '').trim();
+    if (directSrc) {
+      sources.push(directSrc);
+    }
+    for (const source of video.querySelectorAll('source[src]')) {
+      const src = (source.getAttribute('src') || '').trim();
+      if (src) {
+        sources.push(src);
+      }
+    }
+    return sources;
+  }
+
   window.addEventListener('error', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLImageElement)) return;
-    const src = (target.getAttribute('src') || target.currentSrc || '').trim();
-    if (!src || src.startsWith('data:')) return;
-    if (src.startsWith(localAssetPrefix)) {
-      fail('missing local asset', { src });
+    if (target instanceof HTMLImageElement) {
+      const src = (target.getAttribute('src') || target.currentSrc || '').trim();
+      if (!src || src.startsWith('data:')) return;
+      if (src.startsWith(localAssetPrefix)) {
+        fail('missing local asset', { src });
+        return;
+      }
+      fail('image failed to load', { src });
       return;
     }
-    fail('image failed to load', { src });
+
+    if (target instanceof HTMLVideoElement) {
+      const sources = getVideoSources(target);
+      if (sources.some((src) => src.startsWith(localAssetPrefix))) {
+        fail('missing local video asset', { sources });
+        return;
+      }
+      fail('video failed to load', { sources });
+      return;
+    }
+
+    if (target instanceof HTMLSourceElement && target.parentElement instanceof HTMLVideoElement) {
+      const src = (target.getAttribute('src') || '').trim();
+      if (!src) return;
+      if (src.startsWith(localAssetPrefix)) {
+        fail('missing local video asset', { src });
+        return;
+      }
+      fail('video source failed to load', { src });
+    }
   }, true);
 
   window.addEventListener('DOMContentLoaded', () => {
     for (const image of document.querySelectorAll('img[src]')) {
       const src = (image.getAttribute('src') || '').trim();
-      if (!src || src.startsWith('data:')) continue;
-      if (src.startsWith('https://')) {
-        fail('remote image URL is unsupported in saved slides; download it into ./assets/<file>', { src });
-        continue;
+      validateAssetSource('image', src);
+    }
+
+    for (const video of document.querySelectorAll('video')) {
+      for (const src of getVideoSources(video)) {
+        validateAssetSource('video', src);
       }
-      if (src.startsWith('http://')) {
-        fail('remote http:// image URL is unsupported in saved slides; download it into ./assets/<file>', { src });
-        continue;
-      }
-      if (absolutePathRe.test(src) || src.startsWith('/')) {
-        fail('non-portable image path is unsupported', { src });
-        continue;
-      }
-      if (!src.startsWith(localAssetPrefix)) {
-        warn('noncanonical local image path should use ./assets/<file>', { src });
+
+      const poster = (video.getAttribute('poster') || '').trim();
+      if (poster) {
+        validateAssetSource('image', poster);
       }
     }
 

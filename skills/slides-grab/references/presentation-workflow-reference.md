@@ -27,9 +27,10 @@ Use **design-skill** (`.claude/skills/design-skill/SKILL.md`).
 4. If validation fails, automatically fix the slide HTML/CSS until validation passes.
 5. Build the viewer: `node scripts/build-viewer.js --slides-dir <path>`
 6. For complex diagrams (architecture, workflows, relationship maps, multi-node concepts), prefer `tldraw`. Render a local diagram asset with `slides-grab tldraw`, store it under `<slides-dir>/assets/`, and place it into the slide with a normal `<img>`.
-7. Present viewer to user for review.
-8. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
-9. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
+7. Keep local videos under `<slides-dir>/assets/`, prefer `poster="./assets/<file>"` thumbnails, and use `slides-grab fetch-video --url <youtube-url> --slides-dir <path>` (or `yt-dlp` directly) when the source starts on a supported web page.
+8. Present viewer to user for review.
+9. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
+10. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
 
 **Do not proceed to Stage 3 without approval.**
 

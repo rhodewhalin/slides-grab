@@ -7,11 +7,13 @@
 
 ### 4. Image Usage Rules (Local Asset / Data URL / Remote URL / Placeholder)
 - Always include alt on img tags.
-- Use `./assets/<file>` as the default image contract for slide HTML.
+- Use `./assets/<file>` as the default image and video contract for slide HTML.
 - Keep slide assets in `<slides-dir>/assets/`.
 - Use `tldraw`-generated assets for complex diagrams whenever possible.
 - `data:` URLs are allowed for fully self-contained slides.
 - Do not leave remote `http(s)://` image URLs in saved slide HTML; download source images into `<slides-dir>/assets/` and reference them as `./assets/<file>`.
+- Store local videos under `<slides-dir>/assets/`, reference them as `./assets/<file>`, and prefer `poster="./assets/<file>"` for export-friendly thumbnails.
+- If a video starts on YouTube or another supported page, use `slides-grab fetch-video --url <youtube-url> --slides-dir <path>` (or `yt-dlp` directly if needed) before saving the slide HTML.
 - Do not use absolute filesystem paths in slide HTML.
 - Do not use non-body `background-image` for content imagery; use `<img>` instead.
 - Use `data-image-placeholder` to reserve space when no image is available yet.
@@ -25,6 +27,7 @@
 - After validation passes, run `slides-grab build-viewer --slides-dir <path>`.
 - Edit only the relevant HTML file during revision loops.
 - Prefer `slides-grab tldraw` + local exported assets for architecture, workflow, relationship, and other complex diagrams.
+- Keep local videos and their poster thumbnails together under `<slides-dir>/assets/`.
 - Never start PPTX conversion without explicit approval.
 - Never forget to build the viewer after slide changes.
 - Do not persist runtime-only editor/viewer injections in saved slide HTML.
@@ -32,6 +35,6 @@
 ## Important Notes
 - CSS gradients are not supported in PowerPoint conversion; replace them with background images.
 - Always include the Pretendard CDN link.
-- Use `./assets/<file>` from each `slide-XX.html` and avoid absolute filesystem paths.
+- Use `./assets/<file>` from each `slide-XX.html` for local images and videos, and avoid absolute filesystem paths.
 - Always include `#` prefix in CSS colors.
 - Never place text directly in `div`/`span`.

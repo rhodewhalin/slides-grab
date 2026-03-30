@@ -140,6 +140,20 @@ program
   });
 
 program
+  .command('fetch-video')
+  .description('Download a video into <slides-dir>/assets via yt-dlp and print the ./assets reference')
+  .requiredOption('--url <url>', 'Video page URL to download with yt-dlp')
+  .option('--slides-dir <path>', 'Slide directory', 'slides')
+  .option('--output-name <name>', 'Optional output stem inside <slides-dir>/assets/')
+  .action(async (options = {}) => {
+    const args = ['--url', String(options.url), '--slides-dir', options.slidesDir];
+    if (options.outputName) {
+      args.push('--output-name', String(options.outputName));
+    }
+    await runCommand('scripts/download-video.js', args);
+  });
+
+program
   .command('figma')
   .description('Export an experimental / unstable Figma Slides importable PPTX')
   .helpOption('-h, --help', 'Show this help message')

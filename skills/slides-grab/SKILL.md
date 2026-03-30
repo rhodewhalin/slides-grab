@@ -34,9 +34,10 @@ Use the installed **slides-grab-design** skill.
 4. If validation fails, automatically fix the slide HTML/CSS until validation passes.
 5. Build the viewer: `slides-grab build-viewer --slides-dir <path>`
 6. For complex diagrams (architecture, workflows, relationship maps, multi-node concepts), prefer `tldraw` over hand-built HTML/CSS diagrams. Render the asset with `slides-grab tldraw`, store it under `<slides-dir>/assets/`, and place it in the slide with a normal `<img>`.
-7. Present viewer to user for review.
-8. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
-9. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
+7. Keep local videos under `<slides-dir>/assets/`, prefer `poster="./assets/<file>"` thumbnails, and use `slides-grab fetch-video --url <youtube-url> --slides-dir <path>` (or `yt-dlp` directly) when the source starts on a supported web page.
+8. Present viewer to user for review.
+9. Revise individual slides based on feedback, then re-run validation and rebuild the viewer.
+10. Optionally launch the visual editor: `slides-grab edit --slides-dir <path>`
 
 **Do not proceed to Stage 3 without approval.**
 
