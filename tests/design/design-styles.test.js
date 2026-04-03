@@ -194,6 +194,39 @@ test('preview-styles treats explicit --output style-preview.html as cwd-relative
   }
 });
 
+test('command hints quote --slides-dir values with spaces', () => {
+  const workspace = makeWorkspace();
+  const slidesDir = path.join('decks', 'my demo');
+  const configPath = path.join(workspace, slidesDir, STYLE_CONFIG_FILE);
+
+  try {
+    const selectOutput = execFileSync(
+      process.execPath,
+      [cliPath, 'select-style', 'glassmorphism', '--slides-dir', slidesDir],
+      {
+        cwd: workspace,
+        encoding: 'utf-8',
+      },
+    );
+
+    writeFileSync(configPath, `${JSON.stringify({ selectedStyleId: 'unknown-style' }, null, 2)}\n`, 'utf-8');
+
+    const listOutput = execFileSync(
+      process.execPath,
+      [cliPath, 'list-styles', '--slides-dir', slidesDir],
+      {
+        cwd: workspace,
+        encoding: 'utf-8',
+      },
+    );
+
+    assert.match(selectOutput, /preview-styles --style glassmorphism --slides-dir 'decks\/my demo'/);
+    assert.match(listOutput, /select-style <id> --slides-dir 'decks\/my demo'/);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test('slides-grab preview-styles without --style renders the full catalog', () => {
   const workspace = makeWorkspace();
   const outputPath = path.join(workspace, 'style-catalog.html');

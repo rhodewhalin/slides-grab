@@ -80,8 +80,16 @@ function resolveWorkspaceDir(slidesDir) {
   return resolve(process.cwd(), String(slidesDir));
 }
 
+function quoteShellArg(value) {
+  const stringValue = String(value);
+  if (!/[\s"'\\$`!()[\]{}<>|&;*?]/.test(stringValue)) {
+    return stringValue;
+  }
+  return `'${stringValue.replaceAll('\'', `'\\''`)}'`;
+}
+
 function buildSlidesDirSuffix(slidesDir) {
-  return slidesDir ? ` --slides-dir ${slidesDir}` : '';
+  return slidesDir ? ` --slides-dir ${quoteShellArg(slidesDir)}` : '';
 }
 
 function resolvePreviewOutputPath(output, workspaceDir, explicitOutput) {
