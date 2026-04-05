@@ -24,19 +24,20 @@ Generate high-quality `slide-XX.html` files in the selected slides workspace (`s
 ## Workflow
 1. Read approved `slide-outline.md`.
 2. When the design direction is still open, suggest `slides-grab list-styles`, optionally `slides-grab preview-styles`, and agree on a direction with the user before generation. If none of the bundled styles fit, design a fully custom visual direction.
-3. Before generating slides, write a quick **visual thesis** (mood/material/energy), a **content plan** (opener → support/proof → detail/story → close/CTA), and the core design tokens (background, surface, text, muted, accent + display/headline/body/caption roles).
-4. Generate slide HTML files with 2-digit numbering in selected `--slides-dir`.
-5. When a slide explicitly needs bespoke imagery, when the user asks for an image, or when stronger imagery would materially improve the slide, prefer `slides-grab image --prompt "<prompt>" --slides-dir <path>` to generate a local asset with Nano Banana Pro and save it under `<slides-dir>/assets/`.
-6. If the deck needs a complex diagram (architecture, workflows, relationship maps, multi-node concepts), create the diagram in `tldraw`, export it with `slides-grab tldraw`, and treat the result as a local slide asset under `<slides-dir>/assets/`.
-7. If the slide needs a local video, store the video under `<slides-dir>/assets/`, reference it as `./assets/<file>`, and prefer a `poster="./assets/<file>"` thumbnail so PDF export uses a stable still image.
-8. If the source video starts on YouTube or another supported page, use `slides-grab fetch-video --url <youtube-url> --slides-dir <path>` (or `yt-dlp` directly if needed) to download it into `<slides-dir>/assets/` before saving the slide HTML.
-9. Run `slides-grab validate --slides-dir <path>` after generation or edits.
-10. If validation fails, automatically fix the source slide HTML/CSS and re-run validation until it passes.
-11. Run the slide litmus check from `references/beautiful-slide-defaults.md` before presenting the deck for review.
-12. Launch the interactive editor for visual review: `slides-grab edit --slides-dir <path>`
-13. Iterate on user feedback by editing only requested slide files, then re-run validation after each edit round.
-14. When the user confirms editing is complete, suggest: build the viewer (`slides-grab build-viewer --slides-dir <path>`) for a final read-only preview, or proceed to export (PDF/PPTX).
-15. Keep revising until user approves conversion stage.
+3. After agreeing on a style, read its full spec from `src/design-styles-data.js` — colors, fonts, layout, signature elements, and things to avoid. Use those fields as the foundation for the next step.
+4. Before generating slides, write a quick **visual thesis** (mood/material/energy), a **content plan** (opener → support/proof → detail/story → close/CTA), and the core design tokens (background, surface, text, muted, accent + display/headline/body/caption roles). Ground these tokens in the chosen style's spec.
+5. Generate slide HTML files with 2-digit numbering in selected `--slides-dir`.
+6. When a slide explicitly needs bespoke imagery, when the user asks for an image, or when stronger imagery would materially improve the slide, prefer `slides-grab image --prompt "<prompt>" --slides-dir <path>` to generate a local asset with Nano Banana Pro and save it under `<slides-dir>/assets/`.
+7. If the deck needs a complex diagram (architecture, workflows, relationship maps, multi-node concepts), create the diagram in `tldraw`, export it with `slides-grab tldraw`, and treat the result as a local slide asset under `<slides-dir>/assets/`.
+8. If the slide needs a local video, store the video under `<slides-dir>/assets/`, reference it as `./assets/<file>`, and prefer a `poster="./assets/<file>"` thumbnail so PDF export uses a stable still image.
+9. If the source video starts on YouTube or another supported page, use `slides-grab fetch-video --url <youtube-url> --slides-dir <path>` (or `yt-dlp` directly if needed) to download it into `<slides-dir>/assets/` before saving the slide HTML.
+10. Run `slides-grab validate --slides-dir <path>` after generation or edits.
+11. If validation fails, automatically fix the source slide HTML/CSS and re-run validation until it passes.
+12. Run the slide litmus check from `references/beautiful-slide-defaults.md` before presenting the deck for review.
+13. Launch the interactive editor for visual review: `slides-grab edit --slides-dir <path>`
+14. Iterate on user feedback by editing only requested slide files, then re-run validation after each edit round.
+15. When the user confirms editing is complete, suggest: build the viewer (`slides-grab build-viewer --slides-dir <path>`) for a final read-only preview, or proceed to export (PDF/PPTX).
+16. Keep revising until user approves conversion stage.
 
 ## Rules
 - Keep slide size 720pt x 405pt.

@@ -48,6 +48,8 @@ These are the packaged design rules for installable `slides-grab` skills.
 - `templates/diagram-tldraw.html`
 - `templates/custom/`
 - `templates/design-styles/README.md` — bundled design collection reference derived from `corazzon/pptx-design-styles`
+- `templates/design-styles/preview.html` — visual gallery of all 35 styles (open with `slides-grab preview-styles`)
+- `src/design-styles-data.js` — full style specs (colors, fonts, layout, signature elements, things to avoid) for all 35 bundled styles; read this after the user picks a style to ground your design tokens
 
 ## Review loop
 - If the design direction is still open, shortlist bundled styles first and agree on a direction with the user before generating slides. If none of the 35 bundled styles fit, design a fully custom visual direction.
