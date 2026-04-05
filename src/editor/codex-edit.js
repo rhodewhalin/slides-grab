@@ -8,6 +8,7 @@ import { getPackageRoot } from '../resolve.js';
 export const SLIDE_SIZE = { width: 960, height: 540 };
 
 const PPT_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'SKILL.md');
+const EDITOR_CODEX_PROMPT_PATH = join(dirname(new URL(import.meta.url).pathname), 'editor-codex-prompt.md');
 const DETAILED_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'detailed-design-rules.md');
 const BEAUTIFUL_SLIDE_DEFAULTS_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'beautiful-slide-defaults.md');
 const EDITOR_PPT_DESIGN_SECTION_HEADINGS = [
@@ -225,16 +226,11 @@ function getEditorPptDesignSkillPrompt() {
     return cachedEditorPptDesignSkillPrompt;
   }
 
-  const prompt = loadMarkdownSections(
-    PPT_DESIGN_SKILL_PATH,
-    EDITOR_PPT_DESIGN_SECTION_HEADINGS,
-    EDITOR_PPT_DESIGN_SKILL_FALLBACK,
-  );
-
-  cachedEditorPptDesignSkillPrompt = pruneDuplicateLines(
-    prompt,
-    EDITOR_PPT_DESIGN_DUPLICATE_PATTERNS,
-  );
+  try {
+    cachedEditorPptDesignSkillPrompt = readFileSync(EDITOR_CODEX_PROMPT_PATH, 'utf8').trim();
+  } catch {
+    cachedEditorPptDesignSkillPrompt = EDITOR_PPT_DESIGN_SKILL_FALLBACK;
+  }
 
   return cachedEditorPptDesignSkillPrompt;
 }
@@ -361,30 +357,11 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
     ];
   });
 
-  const pptDesignSkillPrompt = getEditorPptDesignSkillPrompt();
-  const skillLines = pptDesignSkillPrompt
+  const editorPrompt = getEditorPptDesignSkillPrompt();
+  const editorPromptLines = editorPrompt
     ? [
-        'Project skill guidance (follow strictly):',
-        `Source: ${PPT_DESIGN_SKILL_PATH}`,
-        pptDesignSkillPrompt,
-        '',
-      ]
-    : [];
-  const detailedDesignSkillPrompt = getStructuralDesignSkillPrompt();
-  const detailedSkillLines = detailedDesignSkillPrompt
-    ? [
-        'Detailed design/export guardrails (selected from the full design system):',
-        `Primary source: ${DETAILED_DESIGN_SKILL_PATH}`,
-        detailedDesignSkillPrompt,
-        '',
-      ]
-    : [];
-  const slideArtDirectionPrompt = getSlideArtDirectionPrompt();
-  const slideArtDirectionLines = slideArtDirectionPrompt
-    ? [
-        'Slide art direction defaults (packaged guidance for beautiful HTML slides):',
-        `Primary source: ${BEAUTIFUL_SLIDE_DEFAULTS_PATH}`,
-        slideArtDirectionPrompt,
+        'Slide edit rules (follow strictly):',
+        editorPrompt,
         '',
       ]
     : [];
@@ -392,9 +369,7 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
   return [
     `Edit ${normalizedSlidePath} only.`,
     '',
-    ...skillLines,
-    ...detailedSkillLines,
-    ...slideArtDirectionLines,
+    ...editorPromptLines,
     'User edit request:',
     sanitizedPrompt,
     '',
