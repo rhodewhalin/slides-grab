@@ -2,6 +2,7 @@
 
 import { readdir, readFile, writeFile, mkdtemp, rm, mkdir } from 'node:fs/promises';
 import { watch as fsWatch } from 'node:fs';
+import net from 'node:net';
 import { basename, dirname, join, resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -45,6 +46,8 @@ const CODEX_MODELS = ['gpt-5.4', 'gpt-5.3-codex', 'gpt-5.3-codex-spark'];
 const ALL_MODELS = [...CODEX_MODELS, ...CLAUDE_MODELS];
 const DEFAULT_CODEX_MODEL = CODEX_MODELS[0];
 const SLIDE_FILE_PATTERN = /^slide-.*\.html$/i;
+const PORT_PROBE_HOSTS = ['::', '127.0.0.1'];
+const PORT_PROBE_IGNORED_CODES = new Set(['EAFNOSUPPORT', 'EADDRNOTAVAIL']);
 
 const MAX_RUNS = 200;
 const MAX_LOG_CHARS = 800_000;
@@ -115,6 +118,62 @@ function parseArgs(argv) {
   opts.slidesDir = opts.slidesDir.trim();
 
   return opts;
+}
+
+function buildPortInUseError(port) {
+  return new Error(`Editor port ${port} is already in use. Choose another port with \`--port <number>\` and try again.`);
+}
+
+async function assertHostPortAvailable(port, host) {
+  const probe = net.createServer();
+  try {
+    await new Promise((resolve, reject) => {
+      probe.once('error', reject);
+      probe.listen({ port, host, exclusive: true }, resolve);
+    });
+  } catch (error) {
+    if (error?.code === 'EADDRINUSE') {
+      throw buildPortInUseError(port);
+    }
+
+    if (PORT_PROBE_IGNORED_CODES.has(error?.code)) {
+      return;
+    }
+
+    throw error;
+  } finally {
+    if (probe.listening) {
+      await new Promise((resolve, reject) => {
+        probe.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
+      });
+    }
+  }
+}
+
+async function assertPortUsable(port) {
+  for (const host of PORT_PROBE_HOSTS) {
+    await assertHostPortAvailable(port, host);
+  }
+}
+
+async function listenOnPort(app, port) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => resolve(server));
+    server.once('error', (error) => {
+      if (error?.code === 'EADDRINUSE') {
+        reject(buildPortInUseError(port));
+        return;
+      }
+
+      reject(error);
+    });
+  });
 }
 
 const sseClients = new Set();
@@ -392,6 +451,7 @@ function createRunStore() {
 }
 
 async function startServer(opts) {
+  await assertPortUsable(opts.port);
   await loadDeps();
   const slidesDirectory = resolve(process.cwd(), opts.slidesDir);
   await mkdir(slidesDirectory, { recursive: true });
@@ -708,14 +768,14 @@ async function startServer(opts) {
     }, 300);
   });
 
-  const server = app.listen(opts.port, () => {
-    process.stdout.write('\n  slides-grab editor\n');
-    process.stdout.write('  ─────────────────────────────────────\n');
-    process.stdout.write(`  Local:       http://localhost:${opts.port}\n`);
-    process.stdout.write(`  Models:      ${ALL_MODELS.join(', ')}\n`);
-    process.stdout.write(`  Slides:      ${slidesDirectory}\n`);
-    process.stdout.write('  ─────────────────────────────────────\n\n');
-  });
+  const server = await listenOnPort(app, opts.port);
+
+  process.stdout.write('\n  slides-grab editor\n');
+  process.stdout.write('  ─────────────────────────────────────\n');
+  process.stdout.write(`  Local:       http://localhost:${opts.port}\n`);
+  process.stdout.write(`  Models:      ${ALL_MODELS.join(', ')}\n`);
+  process.stdout.write(`  Slides:      ${slidesDirectory}\n`);
+  process.stdout.write('  ─────────────────────────────────────\n\n');
 
   async function shutdown() {
     process.stdout.write('\n[editor] Shutting down...\n');

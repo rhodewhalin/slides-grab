@@ -8,6 +8,7 @@ import { getPackageRoot } from '../resolve.js';
 export const SLIDE_SIZE = { width: 960, height: 540 };
 
 const PPT_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'SKILL.md');
+const EDITOR_CODEX_PROMPT_PATH = join(dirname(new URL(import.meta.url).pathname), 'editor-codex-prompt.md');
 const DETAILED_DESIGN_SKILL_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'detailed-design-rules.md');
 const BEAUTIFUL_SLIDE_DEFAULTS_PATH = join(getPackageRoot(), 'skills', 'slides-grab-design', 'references', 'beautiful-slide-defaults.md');
 const EDITOR_PPT_DESIGN_SECTION_HEADINGS = [
@@ -94,7 +95,7 @@ const DETAILED_DESIGN_SKILL_FALLBACK = [
   '- Never forget to rebuild the viewer after slide changes.',
   '',
   '## Important Notes',
-  '- CSS gradients are not supported in PowerPoint conversion; replace them with background images.',
+  '- CSS gradients may not export cleanly to all formats; prefer solid colors or background images when possible.',
   '- Always include the Pretendard CDN link.',
   '- Use ./assets/<file> from each slide-XX.html for local images and videos, and avoid absolute filesystem paths.',
   '- Always include # prefix in CSS colors.',
@@ -225,16 +226,11 @@ function getEditorPptDesignSkillPrompt() {
     return cachedEditorPptDesignSkillPrompt;
   }
 
-  const prompt = loadMarkdownSections(
-    PPT_DESIGN_SKILL_PATH,
-    EDITOR_PPT_DESIGN_SECTION_HEADINGS,
-    EDITOR_PPT_DESIGN_SKILL_FALLBACK,
-  );
-
-  cachedEditorPptDesignSkillPrompt = pruneDuplicateLines(
-    prompt,
-    EDITOR_PPT_DESIGN_DUPLICATE_PATTERNS,
-  );
+  try {
+    cachedEditorPptDesignSkillPrompt = readFileSync(EDITOR_CODEX_PROMPT_PATH, 'utf8').trim();
+  } catch {
+    cachedEditorPptDesignSkillPrompt = EDITOR_PPT_DESIGN_SKILL_FALLBACK;
+  }
 
   return cachedEditorPptDesignSkillPrompt;
 }
@@ -361,30 +357,11 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
     ];
   });
 
-  const pptDesignSkillPrompt = getEditorPptDesignSkillPrompt();
-  const skillLines = pptDesignSkillPrompt
+  const editorPrompt = getEditorPptDesignSkillPrompt();
+  const editorPromptLines = editorPrompt
     ? [
-        'Project skill guidance (follow strictly):',
-        `Source: ${PPT_DESIGN_SKILL_PATH}`,
-        pptDesignSkillPrompt,
-        '',
-      ]
-    : [];
-  const detailedDesignSkillPrompt = getStructuralDesignSkillPrompt();
-  const detailedSkillLines = detailedDesignSkillPrompt
-    ? [
-        'Detailed design/export guardrails (selected from the full design system):',
-        `Primary source: ${DETAILED_DESIGN_SKILL_PATH}`,
-        detailedDesignSkillPrompt,
-        '',
-      ]
-    : [];
-  const slideArtDirectionPrompt = getSlideArtDirectionPrompt();
-  const slideArtDirectionLines = slideArtDirectionPrompt
-    ? [
-        'Slide art direction defaults (packaged guidance for beautiful HTML slides):',
-        `Primary source: ${BEAUTIFUL_SLIDE_DEFAULTS_PATH}`,
-        slideArtDirectionPrompt,
+        'Slide edit rules (follow strictly):',
+        editorPrompt,
         '',
       ]
     : [];
@@ -392,10 +369,8 @@ export function buildCodexEditPrompt({ slideFile, slidePath, userPrompt, selecti
   return [
     `Edit ${normalizedSlidePath} only.`,
     '',
-    ...skillLines,
-    ...detailedSkillLines,
-    ...slideArtDirectionLines,
-    'User edit request:',
+    ...editorPromptLines,
+    'User edit request (this is the primary objective — follow it faithfully):',
     sanitizedPrompt,
     '',
     'Selected regions on slide (960x540 coordinate space):',

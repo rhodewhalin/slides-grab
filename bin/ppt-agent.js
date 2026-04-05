@@ -27,7 +27,7 @@ const figmaHelpText = [
 
 /**
  * Run a Node.js script from the package, with CWD set to the user's directory.
- * Scripts resolve slide paths via --slides-dir and templates/themes via src/resolve.js.
+ * Scripts resolve slide paths via --slides-dir and templates via src/resolve.js.
  */
 function runNodeScript(relativePath, args = []) {
   return new Promise((resolvePromise, rejectPromise) => {
@@ -67,6 +67,12 @@ async function runCommand(relativePath, args = []) {
 function collectRepeatedOption(value, previous = []) {
   return [...previous, value];
 }
+
+function reportCliError(error) {
+  console.error(`[slides-grab] ${error.message}`);
+  process.exitCode = 1;
+}
+
 
 const program = new Command();
 
@@ -224,7 +230,7 @@ program
     await runCommand('scripts/editor-server.js', args);
   });
 
-// --- Template/theme discovery commands ---
+// --- Template/style discovery commands ---
 
 program
   .command('list-templates')
@@ -245,21 +251,42 @@ program
   });
 
 program
-  .command('list-themes')
-  .description('List all available color themes (local overrides + package built-ins)')
+  .command('list-styles')
+  .description('List bundled design styles agents and users can reference during slide generation')
   .action(async () => {
-    const { listThemes } = await import('../src/resolve.js');
-    const themes = listThemes();
-    if (themes.length === 0) {
-      console.log('No themes found.');
-      return;
+    try {
+      const { listDesignStyles } = await import('../src/design-styles.js');
+      const styles = listDesignStyles();
+
+      if (styles.length === 0) {
+        console.log('No bundled design styles found.');
+        return;
+      }
+
+      console.log('Available design styles:\n');
+      for (const style of styles) {
+        console.log(`  ${style.id.padEnd(22)} ${style.title}`);
+        console.log(`    ${style.mood} · ${style.bestFor}`);
+      }
+
+      console.log(`\nTotal: ${styles.length} styles`);
+      console.log('Preview: slides-grab preview-styles [--style <id>]');
+    } catch (error) {
+      reportCliError(error);
     }
-    console.log('Available themes:\n');
-    for (const t of themes) {
-      const tag = t.source === 'local' ? '(local)' : '(built-in)';
-      console.log(`  ${t.name.padEnd(20)} ${tag}`);
+  });
+
+program
+  .command('preview-styles')
+  .description('Print the path to the bundled 35-style visual preview gallery')
+  .action(async () => {
+    try {
+      const { getPreviewHtmlPath } = await import('../src/design-styles.js');
+      const previewPath = getPreviewHtmlPath();
+      console.log(previewPath);
+    } catch (error) {
+      reportCliError(error);
     }
-    console.log(`\nTotal: ${themes.length} themes`);
   });
 
 program
@@ -280,22 +307,5 @@ program
     console.log(content);
   });
 
-program
-  .command('show-theme')
-  .description('Print the contents of a theme file')
-  .argument('<name>', 'Theme name (e.g. "modern-dark", "executive")')
-  .action(async (name) => {
-    const { resolveTheme } = await import('../src/resolve.js');
-    const result = resolveTheme(name);
-    if (!result) {
-      console.error(`Theme "${name}" not found.`);
-      process.exitCode = 1;
-      return;
-    }
-    const content = readFileSync(result.path, 'utf-8');
-    console.log(`/* Theme: ${name} (${result.source}) */`);
-    console.log(`/* Path: ${result.path} */\n`);
-    console.log(content);
-  });
 
 await program.parseAsync(process.argv);

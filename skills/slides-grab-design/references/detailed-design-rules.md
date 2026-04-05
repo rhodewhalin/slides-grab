@@ -36,7 +36,7 @@
 - Do not persist runtime-only editor/viewer injections in saved slide HTML.
 
 ## Important Notes
-- CSS gradients are not supported in PowerPoint conversion; replace them with background images.
+- CSS gradients may not export cleanly to all formats; prefer solid colors or background images when possible.
 - Always include the Pretendard CDN link.
 - Use `./assets/<file>` from each `slide-XX.html` for local images and videos, and avoid absolute filesystem paths.
 - Always include `#` prefix in CSS colors.
